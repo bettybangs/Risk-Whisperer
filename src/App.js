@@ -156,8 +156,8 @@ export default function App() {
     setInput(ex.text);
   }
 
-  var riskColor = result ? (result.overallRiskScore >= 7 ? "#e07030" : result.overallRiskScore >= 4 ? "#c8a830" : "#6eccc0") : "#6eccc0";
-  var maturityColors = { "Initial": "#e07030", "Developing": "#c8a830", "Defined": "#c8a830", "Managed": "#6eccc0", "Optimizing": "#50c878" };
+  var riskColor = "#6eccc0";
+  var maturityColors = { "Initial": "#6eccc0", "Developing": "#6eccc0", "Defined": "#6eccc0", "Managed": "#6eccc0", "Optimizing": "#6eccc0" };
 
   return (
     <>
