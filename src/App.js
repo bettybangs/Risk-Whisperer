@@ -174,12 +174,12 @@ export default function App() {
             </div>
           </div>
 
-          <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0.5rem 0 0.1rem", color: "#f5ead8" }}>AuditTrail</h1>
+          <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0.5rem 0 0.1rem", color: "#f5ead8" }}>Risk Whisperer</h1>
           <p style={{ color: "#777", marginBottom: "1.5rem", fontSize: 14 }}>AI-powered security control assessor · {framework} · {env}</p>
 
           {showHelp && (
             <div style={{ background: "#242424", border: "1px solid #333", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }} className="no-print">
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#c17f3a", margin: "0 0 0.75rem", letterSpacing: "0.08em" }}>HOW TO USE AUDITTRAIL</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#c17f3a", margin: "0 0 0.75rem", letterSpacing: "0.08em" }}>HOW TO USE Risk Whisperer</p>
               <div style={{ marginBottom: "1rem" }}>
                 <div className="help-step">
                   <div className="step-num">1</div>
@@ -199,7 +199,7 @@ export default function App() {
                   <div className="step-num">3</div>
                   <div>
                     <p style={{ fontSize: 13, color: "#f5ead8", margin: "0 0 2px", fontWeight: 600 }}>Click Assess control</p>
-                    <p style={{ fontSize: 12, color: "#777", margin: 0, lineHeight: 1.6 }}>AuditTrail will analyze your control and return results in about 10-15 seconds.</p>
+                    <p style={{ fontSize: 12, color: "#777", margin: 0, lineHeight: 1.6 }}>Risk Whisperer will analyze your control and return results in about 10-15 seconds.</p>
                   </div>
                 </div>
                 <div className="help-step">

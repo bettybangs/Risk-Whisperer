@@ -1,10 +1,10 @@
-# AuditTrail
+# Risk Whisperer
 
 ### AI-Powered Security Control Assessor
 
-AuditTrail is a GRC portfolio tool that uses Claude AI to assess security controls against major compliance frameworks. Paste in a control description or system detail and instantly receive assessment questions, evidence requirements, potential weaknesses with remediation recommendations, and framework control mappings — the same outputs a senior GRC analyst would produce manually.
+Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security controls against major compliance frameworks. Paste in a control description or system detail and instantly receive assessment questions, evidence requirements, potential weaknesses with remediation recommendations, and framework control mappings — the same outputs a senior GRC analyst would produce manually.
 
-![AuditTrail Screenshot](audittrail-screenshot.png)
+![Risk Whisperer Screenshot](Risk Whisperer-screenshot.png)
 
 ---
 
@@ -54,8 +54,8 @@ AWS · AWS GovCloud · Azure · Azure Government · GCP · Oracle Cloud (OCI) ·
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/bettybangs/audittrail.git
-   cd audittrail
+   git clone https://github.com/bettybangs/Risk Whisperer.git
+   cd Risk Whisperer
    ```
 
 2. **Install dependencies**
@@ -118,4 +118,4 @@ Built by Beth Gerharts as a GRC portfolio project demonstrating AI-assisted secu
 
 ## Disclaimer
 
-AuditTrail is a portfolio and educational tool. Outputs should be reviewed by a qualified GRC professional before use in a formal audit or compliance program.
+Risk Whisperer is a portfolio and educational tool. Outputs should be reviewed by a qualified GRC professional before use in a formal audit or compliance program.
