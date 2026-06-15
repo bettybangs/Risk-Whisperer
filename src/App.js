@@ -405,13 +405,21 @@ export default function App() {
 }
 
 function Card({ title, accent, children, onCopy, copied }) {
+  const [open, setOpen] = useState(false);
   return (
     <div style={{ background: "#242424", border: "1px solid #333", borderRadius: 12, overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.85rem 1.25rem", borderBottom: "1px solid #333", borderLeft: "3px solid " + accent }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: accent, letterSpacing: "0.06em" }}>{title.toUpperCase()}</span>
-        <button className="copy-btn no-print" onClick={onCopy}>{copied ? "Copied!" : "Copy"}</button>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.85rem 1.25rem", borderLeft: "3px solid " + accent, cursor: "pointer", borderBottom: open ? "1px solid #333" : "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: accent, letterSpacing: "0.06em" }}>{title.toUpperCase()}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {open && <button className="copy-btn no-print" onClick={e => { e.stopPropagation(); onCopy(); }}>{copied ? "Copied!" : "Copy"}</button>}
+          <span style={{ color: "#555", fontSize: 16, lineHeight: 1 }}>{open ? "▲" : "▼"}</span>
+        </div>
       </div>
-      <div style={{ padding: "1rem 1.25rem" }}>{children}</div>
+      {open && <div style={{ padding: "1rem 1.25rem" }}>{children}</div>}
     </div>
   );
 }
