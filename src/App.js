@@ -187,7 +187,8 @@ export default function App() {
           </div>
 
           <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0.5rem 0 0.1rem", color: "#f5ead8" }}>Risk Whisperer</h1>
-          <p style={{ color: "#777", marginBottom: "1.5rem", fontSize: 14 }}>AI-powered security control assessor · {framework} · {env}</p>
+          <p style={{ color: "#777", marginBottom: "0.25rem", fontSize: 14 }}>Know your risks before your auditor does.</p>
+<p style={{ color: "#555", marginBottom: "1.5rem", fontSize: 12 }}>AI-powered security control assessor · {framework} · {env}</p>
 
           {showHelp && (
             <div style={{ background: "#242424", border: "1px solid #333", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }} className="no-print">
