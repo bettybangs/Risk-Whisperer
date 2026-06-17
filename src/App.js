@@ -139,7 +139,7 @@ export default function App() {
       });
     } catch (e) {
       if (e.message?.includes("401") || e.message?.includes("invalid x-api-key") || e.message?.includes("authentication")) {
-        setError("Invalid API key. Check your REACT_APP_ANTHROPIC_API_KEY in .env");
+        setError("Invalid API key. Check your REACT_APP_SANTHROPIC_API_KEY in .env");
       } else if (e.message?.includes("429") || e.message?.includes("rate")) {
         setError("Rate limit hit. Wait 30 seconds and try again.");
       } else if (e.message?.includes("fetch") || e.message?.includes("network") || e.message?.includes("Failed")) {
