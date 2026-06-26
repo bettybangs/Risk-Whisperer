@@ -121,7 +121,7 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
           system: "You are a senior GRC analyst and security control assessor specializing in " + env + " cloud environments and " + framework + " compliance." + familyHint + " Return ONLY valid JSON (no markdown, no backticks) with these exact keys: assessmentQuestions (array of 6-8 specific interview questions an auditor would ask), evidenceToCollect (array of 6-8 specific artifacts/screenshots/logs to request), potentialWeaknesses (array of 4-6 objects with {name, description, severity, recommendation} where severity is High/Medium/Low), nistControls (array of 5-8 objects with {id, name, rationale}), overallRiskScore (a number 1-10 where 10 is highest risk), riskJustification (2-3 sentence explanation of the score), controlMaturity (one of: Initial/Developing/Defined/Managed/Optimizing), maturityJustification (1-2 sentence explanation). Be specific to " + env + " services and " + framework + " requirements.",
           messages: [{ role: "user", content: "Assess this security control:\n\n" + input }]
@@ -161,7 +161,7 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
           system: "You are a communication specialist who translates technical GRC security findings into plain business language. Return ONLY valid JSON (no markdown, no backticks) with these exact keys: assessmentQuestionsPlain (array of the same number of questions rewritten in plain language for a non-technical business audience, no jargon or control IDs), evidenceToCollectPlain (array of the same evidence items rewritten in plain language a business stakeholder would understand), potentialWeaknessesPlain (array of the same weaknesses as objects with {name, description, severity, recommendation} rewritten in plain business language explaining business risk and impact, no technical jargon), riskJustificationPlain (risk explanation rewritten for a business executive with no GRC background), maturityJustificationPlain (maturity explanation in plain business language).",
           messages: [{ role: "user", content: "Translate these GRC findings into plain business language:\n\n" + JSON.stringify(result) }]
@@ -174,7 +174,7 @@ export default function App() {
       setPlainResult(parsed);
       setViewMode("plain");
     } catch (e) {
-      setError("Could not load Business View. Try again.");
+      setError("Could not load Plain Talk. Try again.");
     }
     setTranslating(false);
   }
@@ -376,13 +376,13 @@ export default function App() {
                 <button
                   onClick={switchToTech}
                   style={{ padding: "6px 18px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: viewMode === "tech" ? "1px solid #6eccc0" : "1px solid #444", background: viewMode === "tech" ? "#1a2e2c" : "none", color: viewMode === "tech" ? "#6eccc0" : "#666", fontFamily: "inherit" }}>
-                  🔬 Tech Talk
+                   💻 Tech Talk
                 </button>
                 <button
                   onClick={switchToPlain}
                   disabled={translating}
                   style={{ padding: "6px 18px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: translating ? "default" : "pointer", border: viewMode === "plain" ? "1px solid #c8a830" : "1px solid #444", background: viewMode === "plain" ? "#1a1400" : "none", color: viewMode === "plain" ? "#c8a830" : "#666", fontFamily: "inherit" }}>
-                  {translating ? "Translating..." : "💼 Business View"}
+                  {translating ? "Translating..." : "💬 Plain Talk"}
                 </button>
               </div>
 
