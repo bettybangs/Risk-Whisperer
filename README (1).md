@@ -5,11 +5,11 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 🔗 **Live app:** [riskwhisperer.vercel.app](https://riskwhisperer.vercel.app)
 
-### 🔬 Tech Talk View
+### 💻 Tech Talk View
 ![Tech Talk View](screenshot-tech-talk.png)
 
-### 💼 Business View
-![Business View](screenshot-business-view.png)
+### 💬 Plain Talk View
+![Plain Talk View](screenshot-plain-talk.png)
 
 ---
 
@@ -30,7 +30,7 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 ## Features
 
-- 🔬 **Tech Talk / 💼 Business View toggle** — switch output between GRC technical language and plain business language for executives, legal, or finance stakeholders. Translation is generated on demand via a second AI call and cached for instant toggling
+- 💻 **Tech Talk / 💬 Plain Talk toggle** — switch output between GRC technical language and plain language for executives, legal, or finance stakeholders. Translation is generated on demand via a second AI call and cached for instant toggling
 - 🔒 **Secure API proxy** — the Anthropic API key lives server-side in a Vercel serverless function, never exposed in the browser
 - ⏳ **Rotating loading messages** — descriptive status updates during the AI assessment so you always know what's happening
 - 🗂 **Collapsible output cards** — expand only what you need
