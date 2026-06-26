@@ -3,7 +3,13 @@
 
 Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security controls against major compliance frameworks. Paste in a control description or system detail and instantly receive assessment questions, evidence requirements, potential weaknesses with remediation recommendations, and framework control mappings — the same outputs a senior GRC analyst would produce manually.
 
-![Risk Whisperer Screenshot](risk-whisperer-screenshot.png)
+🔗 **Live app:** [riskwhisperer.vercel.app](https://riskwhisperer.vercel.app)
+
+### 🔬 Tech Talk View
+![Tech Talk View](screenshot-tech-talk.png)
+
+### 💼 Business View
+![Business View](screenshot-business-view.png)
 
 ---
 
@@ -18,18 +24,23 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 | Weaknesses & Recommendations | Gaps identified with specific remediation steps |
 | Framework Mappings | Which official controls apply, with rationale |
 
+> Risk Whisperer targets **Stage 2 of the audit lifecycle (Control Assessment)** — automating the outputs that feed directly into evidence collection and findings documentation.
+
 ---
 
 ## Features
 
+- 🔬 **Tech Talk / 💼 Business View toggle** — switch output between GRC technical language and plain business language for executives, legal, or finance stakeholders. Translation is generated on demand via a second AI call and cached for instant toggling
+- 🔒 **Secure API proxy** — the Anthropic API key lives server-side in a Vercel serverless function, never exposed in the browser
+- ⏳ **Rotating loading messages** — descriptive status updates during the AI assessment so you always know what's happening
 - 🗂 **Collapsible output cards** — expand only what you need
 - 💾 **Persistent history** — assessments survive closing the browser tab via localStorage
 - 📱 **Installable PWA** — add to your phone or desktop home screen, launches like a native app
-- ⏳ **Loading spinner** — animated feedback during API calls
 - ⚠️ **Smart error handling** — specific messages for bad API keys, rate limits, and network failures
 - 📄 **Export PDF** — save the full assessment report
 - 📋 **Copy buttons** — copy individual sections to clipboard
 - 🧪 **Example presets** — four pre-filled controls to demo the tool instantly
+- 🔄 **Regenerate button** — re-run the assessment on current input
 
 ---
 
@@ -66,23 +77,49 @@ AWS · AWS GovCloud · Azure · Azure Government · GCP · Oracle Cloud (OCI) ·
 
 1. **Clone the repository**
 ```bash
-   git clone https://github.com/bettybangs/Risk-Whisperer.git
-   cd Risk-Whisperer
+git clone https://github.com/bettybangs/Risk-Whisperer.git
+cd Risk-Whisperer
 ```
 
 2. **Install dependencies**
 ```bash
-   npm install
+npm install
 ```
 
 3. **Add your API key**
    Create a `.env` file in the root folder:
    ```
-   REACT_APP_ANTHROPIC_API_KEY=your-api-key-here
+   ANTHROPIC_API_KEY=your-api-key-here
    ```
 
 4. **Start the app**
 ```bash
-   npm start
+npm start
 ```
-   The app opens at `http://localhost:3000`   
+   The app opens at `http://localhost:3000`
+
+### Deployment (Vercel)
+
+The app uses a serverless function (`api/assess.js`) to proxy API calls securely. When deploying to Vercel, add `ANTHROPIC_API_KEY` as an environment variable in your Vercel project settings. Do **not** use the `REACT_APP_` prefix — the key should only be accessible server-side.
+
+---
+
+## Architecture
+
+```
+Browser → /api/assess (Vercel serverless function) → Anthropic API
+```
+
+The React frontend never touches the API key directly. All requests go through the serverless proxy, which injects the key from Vercel's environment variables server-side.
+
+---
+
+## Built With
+
+- [React](https://react.dev/) — frontend UI
+- [Anthropic Claude API](https://anthropic.com) — AI assessment engine (claude-haiku-4-5)
+- [Vercel](https://vercel.com) — deployment and serverless functions
+
+---
+
+*Risk Whisperer is a portfolio and educational tool. Outputs should be reviewed by a qualified GRC professional before use in formal audits or compliance programs.*
