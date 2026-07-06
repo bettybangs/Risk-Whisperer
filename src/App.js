@@ -363,8 +363,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
             <p style={{ fontSize: 11, color: input.trim().length < 50 ? "#555" : "#3d8a80", margin: "4px 0 0", textAlign: "right" }}>
               {input.trim().length}/2000 {input.trim().length < 50 && input.trim().length > 0 ? `· ${50 - input.trim().length} more characters needed` : input.trim().length >= 50 ? "✓ Ready" : ""}
             </p>
-  {input.trim().length}/2000 {input.trim().length < 50 && input.trim().length > 0 ? `· ${50 - input.trim().length} more characters needed` : input.trim().length >= 50 ? "✓ Ready" : ""}
-</p>
+ 
             <div style={{ marginTop: 8, marginBottom: 12 }}>
               <p style={{ fontSize: 11, color: "#c8a830", margin: "0 0 6px", letterSpacing: "0.06em", fontWeight: 700 }}>LOAD AN EXAMPLE</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
