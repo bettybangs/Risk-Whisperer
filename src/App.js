@@ -130,6 +130,20 @@ function updatePoam(weaknessId, field, value) {
     setPlainResult(null);
     setViewMode("tech");
     setLoading(true);
+    const suspiciousPatterns = [
+  /ignore (all )?(previous|prior|above) instructions/i,
+  /system prompt/i,
+  /api.?key/i,
+  /reveal|expose|leak|dump/i,
+  /jailbreak/i,
+  /pretend you are/i,
+  /you are now/i,
+];
+if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
+  setError("Input contains unsupported content. Please describe a security control or system configuration.");
+  setLoading(false);
+  return;
+}
     try {
       var familyHint = family !== "Any (Auto-detect)" ? " Focus on the " + family + " control family." : "";
       var res = await fetch("/api/assess", {
@@ -344,8 +358,9 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
               value={input}
               onChange={function(e) { setInput(e.target.value); }}
               placeholder="Describe the security control, policy, or system configuration you want assessed. Include technologies used, processes in place, and any relevant context. The more specific you are, the better the assessment..."
-              style={{ width: "100%", minHeight: 130, padding: "0.75rem", borderRadius: 8, fontSize: 14, resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }}
-            />
+              <p style={{ fontSize: 11, color: input.trim().length < 50 ? "#555" : "#3d8a80", margin: "4px 0 0", textAlign: "right" }}>
+  {input.trim().length}/2000 {input.trim().length < 50 && input.trim().length > 0 ? `· ${50 - input.trim().length} more characters needed` : input.trim().length >= 50 ? "✓ Ready" : ""}
+</p>
             <div style={{ marginTop: 8, marginBottom: 12 }}>
               <p style={{ fontSize: 11, color: "#c8a830", margin: "0 0 6px", letterSpacing: "0.06em", fontWeight: 700 }}>LOAD AN EXAMPLE</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -381,7 +396,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
                 </select>
               </div>
             </div>
-            <button onClick={assess} disabled={loading || !input.trim()} className="assess-btn"
+            <button onClick={assess} disabled={loading || input.trim().length < 50 || input.trim().length > 2000} className="assess-btn"
               style={{ width: "100%", marginTop: 12, padding: "0.75rem", borderRadius: 8, fontSize: 14, cursor: "pointer" }}>
               {loading ? (
   <LoadingMessage />
