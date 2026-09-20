@@ -152,7 +152,7 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
-          system: "You are a senior GRC analyst and security control assessor specializing in " + env + " cloud environments and " + framework + " compliance." + familyHint + " Return ONLY valid JSON (no markdown, no backticks) with these exact keys: assessmentQuestions (array of 6-8 specific interview questions an auditor would ask), evidenceToCollect (array of 6-8 specific artifacts/screenshots/logs to request), potentialWeaknesses (array of 4-6 objects with {name, description, severity, recommendation} where severity is High/Medium/Low), nistControls (array of 5-8 objects with {id, name, rationale}), overallRiskScore (a number 1-10 where 10 is highest risk), riskJustification (2-3 sentence explanation of the score), controlMaturity (one of: Initial/Developing/Defined/Managed/Optimizing), maturityJustification (1-2 sentence explanation). Be specific to " + env + " services and " + framework + " requirements.",
+          system: "You are a senior GRC analyst and security control assessor specializing in " + env + " cloud environments and " + framework + " compliance." + familyHint + " Return ONLY valid JSON (no markdown, no backticks) with these exact keys: assessmentQuestions (array of 6-8 specific interview questions an auditor would ask), evidenceToCollect (array of 6-8 specific artifacts/screenshots/logs to request), potentialWeaknesses (array of 4-6 objects with {name, description, severity, recommendation} where severity is High/Medium/Low), controlMappings (array of 5-8 objects with {id, name, rationale}, using control identifiers native to the selected framework — e.g., CC-series like CC6.1 for SOC 2, Annex A numbering like A.9.4.2 for ISO 27001, requirement numbers like 8.3 for PCI DSS, AC-2 style IDs only for NIST-based frameworks — never default to NIST numbering for a non-NIST framework), overallRiskScore (a number 1-10 where 10 is highest risk), riskJustification (2-3 sentence explanation of the score), controlMaturity (one of: Initial/Developing/Defined/Managed/Optimizing), maturityJustification (1-2 sentence explanation). Be specific to " + env + " services and " + framework + " requirements.",
           messages: [{ role: "user", content: "Assess this security control:\n\n" + input }]
         })
       });
@@ -318,7 +318,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
                   ["Assessment Questions", "Interview questions to ask the control owner during a formal audit or assessment."],
                   ["Evidence to Collect", "Specific screenshots, logs, and documents to request as audit evidence."],
                   ["Weaknesses", "Security gaps identified in the control, rated High/Medium/Low with remediation steps."],
-                  ["Control Mappings", "Official framework controls that apply. Click any tag to open the NIST reference page."]
+                  ["Control Mappings", "Official framework controls that apply to the selected compliance framework."]
                 ].map(function(item, i) {
                   return (
                     <div key={i} style={{ background: "#1e1e1e", borderRadius: 8, padding: "0.6rem 0.75rem" }}>
