@@ -517,16 +517,18 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   })}
 </Card>
 
-                <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.nistControls.map(function(c) { return c.id + " - " + c.name + ": " + c.rationale; }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-                    {result.nistControls.map(function(c, i) {
-                      return (
-                        <a key={i} className="nist-tag" href={"https://csrc.nist.gov/projects/cprt/catalog#/cprt/framework/version/SP_800_53_5_1_0/home?element=" + c.id} target="_blank" rel="noreferrer">{c.id}</a>
-                      );
-                    })}
-                  </div>
-                  <ul style={{ paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: 8 }}>
-                    {result.nistControls.map(function(c, i) {
+               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + c.name + ": " + c.rationale; }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+    {result.controlMappings.map(function(c, i) {
+      return framework.indexOf("NIST") === 0 ? (
+        <a key={i} className="nist-tag" href={"https://csrc.nist.gov/projects/cprt/catalog#/cprt/framework/version/SP_800_53_5_1_0/home?element=" + c.id} target="_blank" rel="noreferrer">{c.id}</a>
+      ) : (
+        <span key={i} className="nist-tag">{c.id}</span>
+      );
+    })}
+  </div>
+  <ul style={{ paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: 8 }}>
+    {result.controlMappings.map(function(c, i) {
                       return (
                         <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
                           <strong style={{ color: "#f5ead8" }}>{c.id} - {c.name}:</strong> {c.rationale}
