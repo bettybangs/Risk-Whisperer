@@ -153,7 +153,7 @@ const SOC2_CONTROLS = {
 const SOC2_GROUNDED_DEFINITIONS = {
   "CC1.2": "The board of directors demonstrates independence from management and exercises oversight of the development and performance of internal control (COSO Principle 2). This is specifically about board composition, independence, and oversight activity — not general management accountability or policy communication (that's CC1.1/CC1.3/CC2.2).",
   "CC7.1": "The entity uses detection and monitoring procedures to identify (1) changes to configurations that introduce new vulnerabilities, and (2) susceptibility to newly discovered vulnerabilities. This is specifically vulnerability and configuration-change detection — not general security incident detection (that's CC7.2/CC7.3).",
-  "C1.2": "The entity disposes of confidential information to meet the entity's confidentiality objectives. This is specifically about disposal/destruction of confidential information — not encryption, access control, or data segregation (those belong to other controls)."
+  "C1.2": "The entity disposes of confidential information to meet the entity's confidentiality objectives. This is specifically about the disposal/destruction of confidential information — the physical or logical process of removing it so it can no longer be accessed. Do NOT frame this control around who is authorized to access confidential information, access permissions, or authorization requirements — that is a different control (access control / authorization), not C1.2. C1.2 is strictly about the act of destroying/disposing of data once it's no longer needed."
 };
 export default function App() {
   const [input, setInput] = useState("");
@@ -246,7 +246,7 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
           body: JSON.stringify({
             model: "claude-haiku-4-5-20251001",
             max_tokens: 500,
-            system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers — do not describe content belonging to a neighboring control. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, rationale}.\n\nVerified control definitions:\n" + defsText,
+          system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, rationale}.\n\nVerified control definitions:\n" + defsText,
             messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
           })
         });
