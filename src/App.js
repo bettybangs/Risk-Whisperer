@@ -95,17 +95,74 @@ const FRAMEWORK_REFERENCES = {
 // Verified against AICPA Trust Services Criteria — fill in more entries over time.
 // Only entries listed here override the AI's generated name; anything missing falls back to Claude's own text.
 const SOC2_CONTROLS = {
-  "CC7.1": "System Operations — Detection of Security Events",
-  "CC7.2": "System Operations — Monitoring for Anomalies",
-  "CC7.3": "System Operations — Evaluation of Security Incidents",
-  "CC7.4": "System Operations — Incident Response, Containment & Notification",
-  "CC7.5": "System Operations — Recovery from Incidents",
+  "CC7.1": "System Operations – Detection of Security Events",
+  "CC7.2": "System Operations – Monitoring for Anomalies",
+  "CC7.3": "System Operations – Evaluation of Security Incidents",
+  "CC7.4": "System Operations – Incident Response, Containment & Notification",
+  "CC7.5": "System Operations – Recovery from Incidents",
   "CC8.1": "Change Management",
-  "CC9.1": "Risk Mitigation — Business Disruption",
-  "CC9.2": "Risk Mitigation — Vendor & Business Partner Risk",
-  "A1.1": "Availability — Capacity Planning & Forecasting",
-  "A1.2": "Availability — Environmental Protections, Backup & Recovery Infrastructure",
-  "A1.3": "Availability — Recovery Plan Testing",
+  "CC9.1": "Risk Mitigation – Business Disruption",
+  "CC9.2": "Risk Mitigation – Vendor & Business Partner Risk",
+  "A1.1": "Availability – Capacity Planning & Forecasting",
+  "A1.2": "Availability – Environmental Protections, Backup & Recovery Infrastructure",
+  "A1.3": "Availability – Recovery Plan Testing",
+    // CC1 — Control Environment
+  "CC1.1": "Control Environment – Commitment to Integrity & Ethical Values",
+  "CC1.2": "Control Environment – Board Independence & Oversight",
+  "CC1.3": "Control Environment – Management Structure & Reporting Lines",
+  "CC1.4": "Control Environment – Commitment to Competence",
+  "CC1.5": "Control Environment – Accountability for Internal Control",
+
+  // CC2 — Communication and Information
+  "CC2.1": "Communication & Information – Internal Information Requirements",
+  "CC2.2": "Communication & Information – Internal Communication of Objectives",
+  "CC2.3": "Communication & Information – External Communication",
+
+  // CC3 — Risk Assessment
+  "CC3.1": "Risk Assessment – Specifies Security Objectives",
+  "CC3.2": "Risk Assessment – Identifies & Analyzes Risk",
+  "CC3.3": "Risk Assessment – Considers Potential for Fraud",
+  "CC3.4": "Risk Assessment – Identifies & Assesses Changes",
+
+  // CC4 — Monitoring Activities
+  "CC4.1": "Monitoring Activities – Ongoing & Separate Evaluations",
+  "CC4.2": "Monitoring Activities – Communicates Deficiencies",
+
+  // CC5 — Control Activities
+  "CC5.1": "Control Activities – Selects & Develops Control Activities",
+  "CC5.2": "Control Activities – General Controls over Technology",
+  "CC5.3": "Control Activities – Deploys Policies & Procedures",
+
+  // CC6 — Logical and Physical Access Controls
+  "CC6.1": "Logical & Physical Access – Logical Access Security Software",
+  "CC6.2": "Logical & Physical Access – New User Provisioning",
+  "CC6.3": "Logical & Physical Access – Access Modification & Removal",
+  "CC6.4": "Logical & Physical Access – Physical Access Restrictions",
+  "CC6.5": "Logical & Physical Access – Access Termination on Personnel Change",
+  "CC6.6": "Logical & Physical Access – Boundary Protection & Data Classification",
+  "CC6.7": "Logical & Physical Access – Restricted Transmission & Encryption",
+  "CC6.8": "Logical & Physical Access – Protection from Malicious Software",
+
+  // Confidentiality
+  "C1.1": "Confidentiality – Identification & Protection of Confidential Info",
+  "C1.2": "Confidentiality – Disposal of Confidential Information",
+
+  // Processing Integrity
+  "PI1.1": "Processing Integrity – Defines Processing Objectives",
+  "PI1.2": "Processing Integrity – Inputs Complete, Accurate & Valid",
+  "PI1.3": "Processing Integrity – Processing Complete, Accurate & Authorized",
+  "PI1.4": "Processing Integrity – Outputs Complete, Accurate & Timely",
+  "PI1.5": "Processing Integrity – Stored Data Remains Complete & Accurate",
+
+  // Privacy
+  "P1.1": "Privacy – Notice to Data Subjects",
+  "P2.1": "Privacy – Choice & Consent",
+  "P3.1": "Privacy – Collection of Personal Information",
+  "P4.1": "Privacy – Use, Retention & Disposal",
+  "P5.1": "Privacy – Access by Data Subjects",
+  "P6.1": "Privacy – Disclosure & Notification to Third Parties",
+  "P7.1": "Privacy – Quality of Personal Information",
+  "P8.1": "Privacy – Monitoring & Enforcement",
 };
 export default function App() {
   const [input, setInput] = useState("");
