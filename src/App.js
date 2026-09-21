@@ -150,6 +150,11 @@ const SOC2_CONTROLS = {
   "P7.1": "Privacy: Quality of Personal Information",
   "P8.1": "Privacy: Monitoring & Enforcement",
 };
+const SOC2_GROUNDED_DEFINITIONS = {
+  "CC1.2": "The board of directors demonstrates independence from management and exercises oversight of the development and performance of internal control (COSO Principle 2). This is specifically about board composition, independence, and oversight activity — not general management accountability or policy communication (that's CC1.1/CC1.3/CC2.2).",
+  "CC7.1": "The entity uses detection and monitoring procedures to identify (1) changes to configurations that introduce new vulnerabilities, and (2) susceptibility to newly discovered vulnerabilities. This is specifically vulnerability and configuration-change detection — not general security incident detection (that's CC7.2/CC7.3).",
+  "C1.2": "The entity disposes of confidential information to meet the entity's confidentiality objectives. This is specifically about disposal/destruction of confidential information — not encryption, access control, or data segregation (those belong to other controls)."
+};
 export default function App() {
   const [input, setInput] = useState("");
   const [env, setEnv] = useState("AWS");
@@ -221,6 +226,49 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
       if (data.error) throw new Error(data.error.message);
       var text = data.content.find(function(b) { return b.type === "text"; })?.text || "";
       var parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+      var text = data.content.find(function(b) { return b.type === "text"; })?.text || "";
+    var parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+
+    // --- PASTE NEW GROUNDING BLOCK HERE ---
+    var flagged = (parsed.controlMappings || []).filter(function(c) {
+      return SOC2_GROUNDED_DEFINITIONS[c.id];
+    });
+
+    if (flagged.length > 0) {
+      var defsText = flagged.map(function(c) {
+        return c.id + ": " + SOC2_GROUNDED_DEFINITIONS[c.id];
+      }).join("\n");
+
+      try {
+        var groundRes = await fetch("/api/assess", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 500,
+            system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers — do not describe content belonging to a neighboring control. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, rationale}.\n\nVerified control definitions:\n" + defsText,
+            messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
+          })
+        });
+        var groundData = await groundRes.json();
+        if (!groundData.error) {
+          var groundText = groundData.content.find(function(b) { return b.type === "text"; })?.text || "";
+          var grounded = JSON.parse(groundText.replace(/```json|```/g, "").trim());
+          var groundedMap = {};
+          grounded.forEach(function(g) { groundedMap[g.id] = g.rationale; });
+          parsed.controlMappings = parsed.controlMappings.map(function(c) {
+            return groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
+          });
+        }
+      } catch (e) {
+        // grounding call failed — keep the original rationale rather than breaking the assessment
+      }
+    }
+    // --- END NEW GROUNDING BLOCK ---
+
+    parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
+      return { ...w, id: framework + "-" + env + "-" + i + "-" + Date.now() };
+    });
 parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   return { ...w, id: framework + "-" + env + "-" + i + "-" + Date.now() };
 });
