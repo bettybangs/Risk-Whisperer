@@ -91,6 +91,22 @@ const styles = `
 const FRAMEWORK_REFERENCES = {
   "SOC 2 Type II": "Reference for SOC 2 Trust Services Criteria — use ONLY these real control numbers and topics, and do not substitute another framework's domain names: CC1.x = Control Environment, CC2.x = Communication & Information, CC3.x = Risk Assessment, CC4.x = Monitoring Activities, CC5.x = Control Activities, CC6.x = Logical & Physical Access Controls, CC7.x = System Operations (7.1 Detection of security events/vulnerabilities, 7.2 Monitoring for anomalies via defined procedures, 7.3 Evaluation of identified security incidents, 7.4 Response, containment, and communication/notification to affected parties, 7.5 Recovery from identified incidents), CC8.x = Change Management, CC9.1 = Risk mitigation for business disruptions, CC9.2 = Risk mitigation for vendor and business partner relationships, A1.x = Availability (A1.1 Capacity Planning & Forecasting, A1.2 Environmental Protections/Backup/Recovery Infrastructure, A1.3 Recovery Plan Testing), C1.x = Confidentiality, PI1.x = Processing Integrity, P1.x-P8.x = Privacy. Do NOT use ISO 27001 Annex A domain names (e.g., 'Organization of Information Security', 'Information Security Policies and Procedures') to describe SOC 2 controls — these are a different framework."
 };
+
+// Verified against AICPA Trust Services Criteria — fill in more entries over time.
+// Only entries listed here override the AI's generated name; anything missing falls back to Claude's own text.
+const SOC2_CONTROLS = {
+  "CC7.1": "System Operations — Detection of Security Events",
+  "CC7.2": "System Operations — Monitoring for Anomalies",
+  "CC7.3": "System Operations — Evaluation of Security Incidents",
+  "CC7.4": "System Operations — Incident Response, Containment & Notification",
+  "CC7.5": "System Operations — Recovery from Incidents",
+  "CC8.1": "Change Management",
+  "CC9.1": "Risk Mitigation — Business Disruption",
+  "CC9.2": "Risk Mitigation — Vendor & Business Partner Risk",
+  "A1.1": "Availability — Capacity Planning & Forecasting",
+  "A1.2": "Availability — Environmental Protections, Backup & Recovery Infrastructure",
+  "A1.3": "Availability — Recovery Plan Testing",
+};
 export default function App() {
   const [input, setInput] = useState("");
   const [env, setEnv] = useState("AWS");
@@ -519,7 +535,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   })}
 </Card>
 
-               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + c.name + ": " + c.rationale; }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
+               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale; }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
     {result.controlMappings.map(function(c, i) {
       return framework.indexOf("NIST") === 0 ? (
@@ -530,13 +546,14 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
     })}
   </div>
   <ul style={{ paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: 8 }}>
-    {result.controlMappings.map(function(c, i) {
-                      return (
-                        <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
-                          <strong style={{ color: "#f5ead8" }}>{c.id} - {c.name}:</strong> {c.rationale}
-                        </li>
-                      );
-                    })}
+  {result.controlMappings.map(function(c, i) {
+              const displayName = SOC2_CONTROLS[c.id] || c.name;
+              return (
+                <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
+                  <strong style={{ color: "#f5ead8" }}>{c.id} - {displayName}:</strong> {c.rationale}
+                </li>
+              );
+            })}
                   </ul>
                 </Card>
               </div>
