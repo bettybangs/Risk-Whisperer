@@ -594,6 +594,16 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
               return (
                 <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
                   <strong style={{ color: "#f5ead8" }}>{c.id} - {displayName}:</strong> {c.rationale}
+{!SOC2_CONTROLS[c.id] && framework === "SOC 2 Type II" && (
+  <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
+    Control name AI-generated, not yet verified against source
+  </span>
+)}
+{SOC2_CONTROLS[c.id] && framework === "SOC 2 Type II" && (
+  <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
+    Control name verified · explanation AI-generated
+  </span>
+)}
                 </li>
               );
             })}
