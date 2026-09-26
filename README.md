@@ -51,6 +51,7 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 - FedRAMP Moderate / High
 - CIS Controls v8
 - ISO 27001:2022
+- SOC 2 Type I
 - SOC 2 Type II
 - PCI DSS v4.0
 - HIPAA Security Rule

@@ -1,9 +1,16 @@
 import React, { useState } from "react";
 import "./App.css";
 
+const SOC2_TSC_REFERENCE =
+  "Map inputs to SOC 2 Trust Services Criteria (2017 TSC). Use native CC-series IDs (e.g., CC6.1, CC6.8, CC7.1) and Confidentiality/Privacy IDs (e.g., C1.1, P1.1). Do not use NIST or ISO identifiers.";
+
 const FRAMEWORK_REFERENCES = {
-  "SOC 2":
-    "Map inputs to SOC 2 Trust Services Criteria (2017 TSC). Use native CC-series IDs (e.g., CC6.1, CC6.8, CC7.1) and Confidentiality/Privacy IDs (e.g., C1.1, P1.1). Do not use NIST or ISO identifiers.",
+  "SOC 2 Type I":
+    SOC2_TSC_REFERENCE +
+    " This is a SOC 2 Type I examination: it evaluates whether controls are suitably designed and implemented as of a specific date, not whether they operated effectively over time. Focus assessment questions on control design and implementation. Evidence should be point-in-time (policies, procedures, system configurations, screenshots, and a single walkthrough of the control), not samples drawn across an observation period. Do not recommend operating-effectiveness testing over a period.",
+  "SOC 2 Type II":
+    SOC2_TSC_REFERENCE +
+    " This is a SOC 2 Type II examination: it evaluates whether controls operated effectively throughout an observation period (typically 3-12 months). Include assessment questions about consistency of operation across the period. Evidence should include full populations and samples drawn across the observation period, not just a single point-in-time example.",
   "ISO 27001":
     "Map inputs to ISO/IEC 27001:2022 Annex A controls. Use native Annex A numbering (e.g., A.5.1, A.8.7, A.8.8). Do not use NIST or SOC 2 identifiers.",
   "NIST SP 800-53":
@@ -31,7 +38,7 @@ const SOC2_GROUNDED_DEFINITIONS = {
 
 function App() {
   const [input, setInput] = useState("");
-  const [framework, setFramework] = useState("SOC 2");
+  const [framework, setFramework] = useState("SOC 2 Type II");
   const [env, setEnv] = useState("AWS");
   const [family, setFamily] = useState("Any (Auto-detect)");
   const [result, setResult] = useState(null);
@@ -193,7 +200,8 @@ function App() {
             <div>
               <label>Framework:</label>
               <select value={framework} onChange={(e) => setFramework(e.target.value)}>
-                <option value="SOC 2">SOC 2</option>
+                <option value="SOC 2 Type I">SOC 2 Type I</option>
+                <option value="SOC 2 Type II">SOC 2 Type II</option>
                 <option value="ISO 27001">ISO 27001</option>
                 <option value="NIST SP 800-53">NIST SP 800-53</option>
                 <option value="PCI DSS v4.0">PCI DSS v4.0</option>
