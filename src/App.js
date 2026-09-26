@@ -52,10 +52,10 @@ function App() {
   const [input, setInput] = useState("");
   const [framework, setFramework] = useState("SOC 2 Type II");
   const [env, setEnv] = useState("AWS");
-  const [family, setFamily] = useState("Any (Auto-detect)");
+  const [family] = useState("Any (Auto-detect)");
   const [result, setResult] = useState(null);
-  const [plainResult, setPlainResult] = useState(null);
-  const [viewMode, setViewMode] = useState("tech");
+  const [, setPlainResult] = useState(null);
+  const [, setViewMode] = useState("tech");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
