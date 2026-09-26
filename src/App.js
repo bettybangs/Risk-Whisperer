@@ -25,9 +25,21 @@ const FRAMEWORK_REFERENCES = {
 
 const SOC2_GROUNDED_DEFINITIONS = {
   "CC6.1":
-    "The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events. This covers identifying and authenticating users (including multi-factor authentication), restricting logical access, managing credentials, managing points of access such as network boundaries, and encrypting data. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
+    "The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events to meet the entity's objectives. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
+  "CC6.2":
+    "Prior to issuing system credentials and granting system access, the entity registers and authorizes new internal and external users whose access is administered by the entity. For those users whose access is administered by the entity, user system credentials are removed when user access is no longer authorized.",
+  "CC6.3":
+    "The entity authorizes, modifies, or removes access to data, software, functions, and other protected information assets based on roles, responsibilities, or the system design and changes, giving consideration to the concepts of least privilege and segregation of duties, to meet the entity's objectives.",
+  "CC6.4":
+    "The entity restricts physical access to facilities and protected information assets to authorized personnel to meet the entity's objectives.",
+  "CC6.5":
+    "The entity discontinues logical and physical protections over physical assets only after the ability to read or recover data and software from those assets has been diminished and is no longer required to meet the entity's objectives.",
+  "CC6.6":
+    "The entity implements logical access security measures to protect against security events resulting from threats originating outside the entity's system boundaries.",
+  "CC6.7":
+    "The entity restricts the transmission, movement, and removal of information to authorized internal and external users and processes, and protects it during transmission, movement, or removal to meet the entity's objectives.",
   "CC6.8":
-    "Prevents or detects malicious software. Do NOT map CC6.8 for generic system patches or OS updates unless explicit anti-malware measures (like AV or EDR) are mentioned.",
+    "The entity implements controls to prevent or detect and act upon the introduction of unauthorized or malicious software to meet the entity's objectives. Do NOT map CC6.8 for generic system patches or OS updates unless explicit anti-malware measures (like AV or EDR) are mentioned.",
   "CC7.1":
     "Infrastructure and software monitoring detects security anomalies. Do NOT map CC7.1 for routine software patch installations unless active monitoring or logging of anomalies is explicitly detailed.",
   "C1.1":
