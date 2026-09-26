@@ -25,7 +25,7 @@ const FRAMEWORK_REFERENCES = {
 
 const SOC2_GROUNDED_DEFINITIONS = {
   "CC6.1":
-    "Logical access security measures block unauthorized access, but this control specifically governs system boundary access controls and perimeter protection. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
+    "The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events. This covers identifying and authenticating users (including multi-factor authentication), restricting logical access, managing credentials, managing points of access such as network boundaries, and encrypting data. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
   "CC6.8":
     "Prevents or detects malicious software. Do NOT map CC6.8 for generic system patches or OS updates unless explicit anti-malware measures (like AV or EDR) are mentioned.",
   "CC7.1":
