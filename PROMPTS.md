@@ -8,7 +8,7 @@ All prompts live on the server in `api/_prompts.js`. The browser sends only data
 
 | Call | Endpoint | Browser sends | Model | max_tokens |
 |---|---|---|---|---|
-| Assessment | `/api/assess` | `{ framework, env, family, input }` | Claude Haiku 4.5 | 6000 |
+| Assessment | `/api/assess` | `{ framework, env, family, input }` | Claude Haiku 4.5, temperature 0 | 6000 |
 | Judge | `/api/judge` | `{ framework, input, controlMappings }` | Claude Opus 5, medium effort | 4000 |
 | Plain Talk | `/api/plain` | `{ result }` | Claude Haiku 4.5 | 6000 |
 
@@ -57,6 +57,18 @@ The mapping key is `controlMappings`, not `nistControls`, because IDs must be na
 
 Only include a control if the input directly and specifically describes an activity, system, or process that control governs. Do not include a control because it is commonly associated with the topic, because a related control might apply, or because the organization "should" have it. An inferred gap ("no evidence of X") is a reason to exclude, not include. Every rationale must cite specific words or facts from the input. This is why the prompt asks for 1 to 6 mappings rather than a fixed minimum: forcing a minimum count pushed the model to pad the list with loosely related controls.
 
+The prompt also asks the model to re-read each rationale before answering and delete any control whose own rationale says the input does not describe it. Without that step, Haiku sometimes listed a control and then explained in the rationale that it was "not included here".
+
+### 5a. Consistency
+
+Early testing showed the same input could produce different mappings from run to run (CC6.1 in one run, CC7.1 in another). Three changes address this:
+
+- **Temperature 0** on the assessment call, so repeat runs on the same input pick the same controls far more often. The judge runs on Opus 5, which does not accept a temperature setting.
+- **CC6.1 points of focus.** The CC6.1 definition now notes its AICPA points of focus, including managing identification and authentication (such as multi-factor authentication) and managing credentials, so MFA enforcement maps to CC6.1.
+- **CC6.2 boundary.** The CC6.2 definition now says it covers the process of registering, authorizing, and removing users, and that MFA enforcement is not evidence of that process.
+
+Both definition notes are read by the assessment and the judge.
+
 ### 6. Severity Constraints
 
 `severity` is limited to High, Medium, or Low. Values like "Critical" or "Informational" would break the color coding in the UI.
@@ -84,6 +96,7 @@ When the user switches to Plain Talk, `/api/plain` sends the assessment to a com
 | Dynamic injection | One prompt handles 15 frameworks and 9 environments without branching logic. |
 | JSON-only output | The response goes straight into React state with no complex parsing. |
 | Constrained enum values | Unexpected values cannot break UI rendering logic. |
+| Temperature 0 for the assessment | Repeat runs on the same input produce the same mappings far more often. |
 | 6000 max tokens for assessment and Plain Talk | Enough for the full structured output, including the SOC 2 criteria text in the prompt, without truncation. |
 | A separate, stronger judge | A second model checking against the official text catches mappings the first model stretched. |
 | Separate endpoints | Each request makes one model call, so each stays within the 60-second function limit. |
