@@ -172,6 +172,12 @@ The comment block at the top of `api/_security.js` explains each protection in t
 
 ---
 
+## Job Scout
+
+`job-scout/` is a separate tool in this repo. It searches job boards every day for GRC and IAM roles that match your profile and opens a GitHub issue with the results. See [job-scout/README.md](job-scout/README.md).
+
+---
+
 ## Built With
 
 - [React](https://react.dev/): frontend UI

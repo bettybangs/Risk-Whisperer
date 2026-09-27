@@ -1,0 +1,17 @@
+{
+  "name": "job-scout",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Daily search for GRC and IAM roles that match your profile",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "scout": "node scout.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  }
+}

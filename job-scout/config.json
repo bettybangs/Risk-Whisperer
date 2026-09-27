@@ -1,0 +1,45 @@
+{
+  "profile": {
+    "_comment": "Edit this block to describe what you qualify for. Put your résumé in the JOB_SCOUT_RESUME secret (or a local file named in resumeFile) rather than committing it.",
+    "resumeFile": "resume.txt",
+    "yearsExperience": 3,
+    "hasClearance": false,
+    "certifications": ["Security+", "CISA", "CISSP", "CRISC", "CISM", "CCSK", "SailPoint", "Okta Certified"],
+    "locations": ["Remote", "United States"],
+    "remoteOnly": false,
+    "minSalary": 0
+  },
+
+  "match": {
+    "titleInclude": [
+      "GRC", "governance", "risk", "compliance", "audit", "auditor", "assurance",
+      "IAM", "identity", "access management", "privileged access", "PAM", "IGA",
+      "FedRAMP", "RMF", "ISSO", "ISSM", "security control", "cyber risk", "third party risk", "TPRM"
+    ],
+    "titleExclude": [
+      "director", "vice president", "VP", "head of", "chief", "principal", "staff", "intern",
+      "sales", "account executive", "account manager", "marketing", "recruiter",
+      "credit risk", "market risk", "insurance", "underwriter", "actuary", "actuarial", "clinical", "physician", "nurse", "pharmacist", "pharmacy"
+    ],
+    "skills": [
+      "NIST 800-53", "NIST CSF", "NIST 800-171", "RMF", "FedRAMP", "SOC 2", "ISO 27001", "PCI DSS", "HIPAA", "CMMC",
+      "POA&M", "risk assessment", "control testing", "evidence", "audit", "policy", "vendor risk", "third-party risk",
+      "SailPoint", "Okta", "Entra ID", "Azure AD", "CyberArk", "Ping", "SAML", "OIDC", "SCIM", "MFA", "RBAC",
+      "access review", "user access review", "provisioning", "least privilege", "joiner", "ServiceNow", "Archer", "Vanta", "Drata"
+    ],
+    "minScore": 3,
+    "maxAiReviews": 25
+  },
+
+  "sources": {
+    "_comment": "Company boards are a starter list. Add the board slug from a company's careers URL, e.g. boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>. A wrong slug is logged and skipped.",
+    "greenhouse": ["okta", "cloudflare", "datadog", "gitlab", "elastic", "coinbase", "robinhood", "affirm", "samsara", "twilio"],
+    "lever": ["palantir", "plaid"],
+    "ashby": ["vanta", "drata", "ramp", "notion", "linear"],
+    "remotive": ["compliance", "GRC", "identity", "IAM", "risk"],
+    "usajobs": ["GRC", "information system security officer", "identity access management", "cybersecurity compliance", "risk management framework"],
+    "adzuna": ["GRC analyst", "IAM analyst", "identity access management", "security compliance analyst", "cyber risk analyst", "information security analyst compliance"],
+    "adzunaCountry": "us",
+    "maxAgeDays": 3
+  }
+}

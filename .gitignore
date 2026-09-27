@@ -1,2 +1,5 @@
 .env 
 node_modules 
+job-scout/out/
+job-scout/seen.json
+job-scout/resume.txt

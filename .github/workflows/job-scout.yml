@@ -1,0 +1,88 @@
+name: Job Scout
+
+# Every morning, search for new GRC / IAM roles and open a GitHub issue with
+# the matches. GitHub emails you about new issues in your own repo, so the
+# digest lands in your inbox with no extra setup.
+on:
+  schedule:
+    - cron: "17 12 * * *" # 12:17 UTC daily (8:17 am US Eastern during daylight time)
+  workflow_dispatch:
+    inputs:
+      show_all:
+        description: "Ignore the seen-list and show every current match"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: job-scout
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: job-scout
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: job-scout/package-lock.json
+
+      - run: npm ci
+      - run: npm test
+
+      # The seen-list lives in the Actions cache so postings are only reported
+      # once, without committing a file every day.
+      - name: Restore seen-list
+        uses: actions/cache/restore@v4
+        with:
+          path: job-scout/seen.json
+          key: job-scout-seen-${{ github.run_id }}
+          restore-keys: job-scout-seen-
+
+      - name: Search
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          JOB_SCOUT_RESUME: ${{ secrets.JOB_SCOUT_RESUME }}
+          USAJOBS_API_KEY: ${{ secrets.USAJOBS_API_KEY }}
+          USAJOBS_EMAIL: ${{ secrets.USAJOBS_EMAIL }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+        run: node scout.js ${{ inputs.show_all && '--all' || '' }} > /dev/null
+
+      - name: Save seen-list
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: job-scout/seen.json
+          key: job-scout-seen-${{ github.run_id }}
+
+      - name: Open issue with today's matches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count=$(cat out/count.txt)
+          if [ "$count" = "0" ]; then
+            echo "No new matches today; not opening an issue."
+            exit 0
+          fi
+          gh label create job-scout --color 0E8A16 --description "Daily job matches" 2>/dev/null || true
+          gh issue create \
+            --title "Job Scout: $count new GRC / IAM role(s) for $(date -u +%F)" \
+            --body-file "out/digest-$(date -u +%F).md" \
+            --label job-scout
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: job-scout-digest
+          path: job-scout/out/
+          retention-days: 14
