@@ -52,4 +52,12 @@ test('sends only data to the server and shows weak-fit flags and verified labels
   expect(screen.getByText(/Weak fit: Not described\./)).toHaveTextContent('(judged without a verified definition)');
   expect(screen.getByText('Control name verified · explanation AI-generated')).toBeInTheDocument();
   expect(screen.getByText('Control name AI-generated, not yet verified against source')).toBeInTheDocument();
+
+  // The copied text for the mappings card has no em-dash.
+  const writeText = jest.fn();
+  Object.assign(navigator, { clipboard: { writeText } });
+  fireEvent.click(screen.getByText('Copy'));
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('CC9.9 - Made up: Original rationale 2. (Weak fit: Not described., judged without a verified definition)');
+  expect(copied).not.toContain('\u2014');
 });

@@ -46,7 +46,7 @@ const styles = `
   .poam-row input, .poam-row select { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 `;
 
-// Verified against AICPA Trust Services Criteria — fill in more entries over time.
+// Verified against AICPA Trust Services Criteria: fill in more entries over time.
 // Only entries listed here override the AI's generated name; anything missing falls back to Claude's own text.
 const SOC2_CONTROLS = {
   // Verified against the actual AICPA 2017 TSC document (TSP Section 100)
@@ -89,7 +89,7 @@ const SOC2_CONTROLS = {
   "C1.1": "Confidentiality: Identifies & Maintains Confidential Information",
   "C1.2": "Confidentiality: Disposal of Confidential Information",
 
-  // Provisional — not yet checked against the primary AICPA source; verify before fully trusting
+  // Provisional: not yet checked against the primary AICPA source; verify before fully trusting
   "PI1.1": "Processing Integrity: Defines Processing Objectives",
   "PI1.2": "Processing Integrity: Inputs Complete, Accurate & Valid",
   "PI1.3": "Processing Integrity: Processing Complete, Accurate & Authorized",
@@ -211,7 +211,7 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             });
           }
         } catch (e) {
-          // grounding call failed — keep the original rationale rather than breaking the assessment
+          // grounding call failed: keep the original rationale rather than breaking the assessment
         }
       }
 
@@ -565,7 +565,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   })}
 </Card>
 
-               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale + (c.weakFit ? " (Weak fit: " + c.weakFit + (c.weakFitUnverified ? " — judged without a verified definition" : "") + ")" : ""); }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
+               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale + (c.weakFit ? " (Weak fit: " + c.weakFit + (c.weakFitUnverified ? ", judged without a verified definition" : "") + ")" : ""); }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
     {result.controlMappings.map(function(c, i) {
       return framework.indexOf("NIST") === 0 ? (
