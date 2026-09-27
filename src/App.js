@@ -249,9 +249,9 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
       var text = data.content.find(function(b) { return b.type === "text"; })?.text || "";
       var parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
 
-      // Check controls that have verified definitions: drop any the input
-      // doesn't actually describe, and rewrite the rationale for the rest so
-      // it stays within what the real AICPA criterion covers.
+      // Check controls that have verified definitions: rewrite the rationale
+      // so it stays within what the real AICPA criterion covers, and flag
+      // (never remove) any the input doesn't clearly describe.
       var flagged = (parsed.controlMappings || []).filter(function(c) {
         return SOC2_GROUNDED_DEFINITIONS[c.id];
       });
@@ -266,7 +266,7 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             body: JSON.stringify({
               model: "claude-haiku-4-5-20251001",
               max_tokens: 1000,
-              system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Also decide whether each control belongs in the assessment at all: set relevant to true only if the situation directly and specifically describes an activity, system, or process that the verified definition governs. Set relevant to false if the connection is indirect, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean.\n\nVerified control definitions:\n" + defsText,
+              system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Also judge whether each control is a good fit. Judge by the substance of the definition, not its exact wording: an activity that clearly falls within the definition's scope counts even if the definition does not name it. Set relevant to false only if the situation does not describe anything the definition governs, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process; otherwise set relevant to true. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean.\n\nVerified control definitions:\n" + defsText,
               messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
             })
           });
@@ -275,18 +275,15 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             var groundText = groundData.content.find(function(b) { return b.type === "text"; })?.text || "";
             var grounded = JSON.parse(groundText.replace(/```json|```/g, "").trim());
             var groundedMap = {};
-            var removed = [];
+            var weakFitMap = {};
             grounded.forEach(function(g) {
-              if (g.relevant === false) removed.push({ id: g.id, reason: g.rationale });
+              if (g.relevant === false) weakFitMap[g.id] = g.rationale;
               else groundedMap[g.id] = g.rationale;
             });
-            var removedIds = removed.map(function(r) { return r.id; });
-            parsed.controlMappings = parsed.controlMappings
-              .filter(function(c) { return removedIds.indexOf(c.id) === -1; })
-              .map(function(c) {
-                return groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
-              });
-            parsed.removedMappings = removed;
+            parsed.controlMappings = parsed.controlMappings.map(function(c) {
+              if (weakFitMap[c.id]) return { ...c, weakFit: weakFitMap[c.id] };
+              return groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
+            });
           }
         } catch (e) {
           // grounding call failed — keep the original rationale rather than breaking the assessment
@@ -650,7 +647,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   })}
 </Card>
 
-               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale; }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
+               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale + (c.weakFit ? " (Weak fit: " + c.weakFit + ")" : ""); }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
     {result.controlMappings.map(function(c, i) {
       return framework.indexOf("NIST") === 0 ? (
@@ -666,6 +663,11 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
               return (
                 <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
                   <strong style={{ color: "#f5ead8" }}>{c.id} - {displayName}:</strong> {c.rationale}
+{c.weakFit && (
+  <span style={{ display: "block", fontSize: 11, color: "#e0a040", marginTop: 4 }}>
+    ⚠ Weak fit: {c.weakFit}
+  </span>
+)}
 {!SOC2_CONTROLS[c.id] && framework.startsWith("SOC 2") && (
   <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
     Control name AI-generated, not yet verified against source
@@ -680,14 +682,6 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
               );
             })}
                   </ul>
-                  {result.removedMappings?.length > 0 && (
-                    <div style={{ marginTop: 12, fontSize: 11, color: "#a89060", fontStyle: "italic", lineHeight: 1.6 }}>
-                      Removed after checking against verified definitions:
-                      {result.removedMappings.map(function(r, i) {
-                        return <div key={i}>{r.id}: {r.reason}</div>;
-                      })}
-                    </div>
-                  )}
                 </Card>
               </div>
             </>
