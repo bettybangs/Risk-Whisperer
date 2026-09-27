@@ -198,10 +198,34 @@ describe("model calls", () => {
     expect(res.statusCode).toBe(401);
     expect(res.body.error.message).toContain("401");
 
+    jest.spyOn(console, "error").mockImplementation(() => {});
     mockClaude("not json at all");
     res = await call(assessHandler, makeReq({ framework: "GDPR", env: "GCP", family: "Any (Auto-detect)", input: INPUT }));
     expect(res.statusCode).toBe(502);
     expect(res.body.error.message).toContain("JSON");
+    console.error.mockRestore();
+  });
+
+  test("assess: tolerates a sentence around the JSON", async () => {
+    mockClaude("Here is the assessment:\n" + JSON.stringify(ASSESSMENT) + "\nLet me know if you need more.");
+    const res = await call(assessHandler, makeReq({ framework: "GDPR", env: "GCP", family: "Any (Auto-detect)", input: INPUT }));
+    expect(res.statusCode).toBe(200);
+    expect(res.body.result).toEqual(ASSESSMENT);
+  });
+
+  test("assess: a reply cut off at max_tokens gets its own message", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ content: [{ type: "text", text: '{"assessmentQuestions": ["q1", "q2' }], stop_reason: "max_tokens", usage: { output_tokens: 6000 } })
+    });
+    const res = await call(assessHandler, makeReq({ framework: "GDPR", env: "GCP", family: "Any (Auto-detect)", input: INPUT }));
+    expect(res.statusCode).toBe(502);
+    expect(res.body.error.message).toBe("The AI's answer was cut off at the 6000-token output limit. Please try again.");
+    // Must not trip the app's generic JSON / rate / network error mapping.
+    expect(res.body.error.message).not.toMatch(/JSON|rate|fetch|network|Failed|401|429/);
+    console.error.mockRestore();
   });
 
   test("judge: Opus 5 at 4000 tokens with medium effort, verified flags set by the server", async () => {

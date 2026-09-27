@@ -46,14 +46,35 @@ export async function callClaude(request) {
   }
 
   var block = (data.content || []).find(function(b) { return b.type === "text"; });
-  return block ? block.text : "";
+  var text = block ? block.text : "";
+
+  // A reply cut off at max_tokens is never valid JSON, so say so plainly
+  // instead of reporting a parse error. Logged for the Vercel function logs.
+  if (data.stop_reason === "max_tokens") {
+    console.error("Claude reply hit max_tokens", { model: request.model, max_tokens: request.max_tokens, usage: data.usage });
+    throw new HttpError(502, "The AI's answer was cut off at the " + request.max_tokens + "-token output limit. Please try again.");
+  }
+  return text;
 }
 
-// Parse the model's JSON reply, tolerating the code fences it sometimes adds.
+// Parse the model's JSON reply, tolerating the code fences it sometimes adds
+// and any sentence it puts before or after the JSON.
 export function parseModelJson(text) {
+  var cleaned = text.replace(/```json|```/g, "").trim();
   try {
-    return JSON.parse(text.replace(/```json|```/g, "").trim());
+    return JSON.parse(cleaned);
   } catch (e) {
+    // Fall back to the outermost {...} or [...] in the reply.
+    var start = cleaned.search(/[[{]/);
+    var end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+    if (start !== -1 && end > start) {
+      try {
+        return JSON.parse(cleaned.slice(start, end + 1));
+      } catch (e2) {
+        // fall through
+      }
+    }
+    console.error("Could not parse Claude reply as JSON", { length: text.length, start: text.slice(0, 300), end: text.slice(-300) });
     throw new HttpError(502, "Unexpected JSON from the AI. Please try again.");
   }
 }
