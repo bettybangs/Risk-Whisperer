@@ -54,7 +54,9 @@ export const CONTROL_FAMILIES = [
 
 // The server picks the model and token budget for each call.
 export const MODELS = {
-  assess: { model: "claude-haiku-4-5-20251001", max_tokens: 6000 },
+  // temperature 0 makes repeat runs on the same input pick the same controls
+  // far more often. (Opus 5 rejects temperature, so the judge leaves it out.)
+  assess: { model: "claude-haiku-4-5-20251001", max_tokens: 6000, temperature: 0 },
   // The fit judgment needs a stronger model than the main call;
   // Haiku repeatedly misjudged which criteria cover MFA.
   judge: { model: "claude-opus-5", max_tokens: 4000, output_config: { effort: "medium" } },
@@ -95,8 +97,8 @@ export const SOC2_GROUNDED_DEFINITIONS = {
   "CC5.1": "The entity selects and develops control activities that contribute to the mitigation of risks to the achievement of objectives to acceptable levels.",
   "CC5.2": "The entity also selects and develops general control activities over technology to support the achievement of objectives.",
   "CC5.3": "The entity deploys control activities through policies that establish what is expected and in procedures that put policies into action.",
-  "CC6.1": "The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events to meet the entity's objectives. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
-  "CC6.2": "Prior to issuing system credentials and granting system access, the entity registers and authorizes new internal and external users whose access is administered by the entity. For those users whose access is administered by the entity, user system credentials are removed when user access is no longer authorized.",
+  "CC6.1": "The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events to meet the entity's objectives. Its points of focus include identifying and authenticating users, managing identification and authentication requirements (such as multi-factor authentication), managing credentials for infrastructure and software, restricting logical access, network segmentation, and encrypting data, so MFA enforcement and credential policies map here. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
+  "CC6.2": "Prior to issuing system credentials and granting system access, the entity registers and authorizes new internal and external users whose access is administered by the entity. For those users whose access is administered by the entity, user system credentials are removed when user access is no longer authorized. This is specifically the process of registering, authorizing, and deprovisioning users; MFA enforcement or the absence of a credential type is not evidence of that process (that is CC6.1).",
   "CC6.3": "The entity authorizes, modifies, or removes access to data, software, functions, and other protected information assets based on roles, responsibilities, or the system design and changes, giving consideration to the concepts of least privilege and segregation of duties, to meet the entity's objectives.",
   "CC6.4": "The entity restricts physical access to facilities and protected information assets (for example, data center facilities, backup media storage, and other sensitive locations) to authorized personnel to meet the entity's objectives.",
   "CC6.5": "The entity discontinues logical and physical protections over physical assets only after the ability to read or recover data and software from those assets has been diminished and is no longer required to meet the entity's objectives.",

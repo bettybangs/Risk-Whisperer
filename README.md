@@ -32,7 +32,7 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 | Step | Model | Endpoint | What it does |
 |---|---|---|---|
-| Assessment | Claude Haiku 4.5 (6000 max tokens) | `/api/assess` | Produces the full assessment as JSON, including 1 to 6 `controlMappings` |
+| Assessment | Claude Haiku 4.5 (6000 max tokens, temperature 0) | `/api/assess` | Produces the full assessment as JSON, including 1 to 6 `controlMappings` |
 | Judge | Claude Opus 5 (4000 max tokens, medium effort) | `/api/judge` | Checks each mapped control against the official AICPA 2017 Trust Services Criteria text and flags weak fits |
 | Plain Talk | Claude Haiku 4.5 (6000 max tokens) | `/api/plain` | Rewrites the findings in plain business language, on demand |
 
@@ -94,9 +94,8 @@ AWS · AWS GovCloud · Azure · Azure Government · GCP · Oracle Cloud (OCI) ·
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js 22 or higher
 - An Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com))
-- The [Vercel CLI](https://vercel.com/docs/cli) to run the API functions locally
 
 ### Installation
 
@@ -117,11 +116,11 @@ npm install
    ANTHROPIC_API_KEY=your-api-key-here
    ```
 
-4. **Start the app with the API functions**
+4. **Start the app**
 ```bash
-vercel dev
+npm start
 ```
-   The app opens at `http://localhost:3000`. `npm start` serves only the React frontend, without the `/api` functions.
+   The app opens at `http://localhost:3000`. `src/setupProxy.js` runs the same `/api` handlers that Vercel runs in production, using the key from `.env`, so the whole app works locally. (`vercel dev` also works if you use the Vercel CLI.)
 
 5. **Run the tests**
 ```bash
@@ -150,6 +149,7 @@ Browser ──{ result }──────────────────�
 | `api/assess.js`, `api/judge.js`, `api/plain.js` | One endpoint per model call |
 | `src/App.js` | The React UI; it sends data only and keeps `SOC2_CONTROLS` for display names |
 | `src/options.js` | Dropdown values, tested to match the server's allowed lists |
+| `src/setupProxy.js` | Local development only: serves the `/api` routes from `npm start` |
 | `vercel.json` | Gives each API function up to 60 seconds |
 
 Each model call is its own request, so no single function runs Haiku and Opus back to back and each stays within the 60-second function limit set in `vercel.json`.

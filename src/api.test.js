@@ -185,7 +185,9 @@ describe("model calls", () => {
     const sent = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(sent.model).toBe("claude-haiku-4-5-20251001");
     expect(sent.max_tokens).toBe(6000);
+    expect(sent.temperature).toBe(0);
     expect(sent.system).toContain("Focus on the Access Control control family.");
+    expect(sent.system).toContain("such as multi-factor authentication");
     expect(sent.system).toContain("SOC 2 Type I examination");
     expect(sent.system).toContain("CC6.1: The entity implements logical access security software");
     expect(sent.messages).toEqual([{ role: "user", content: "Assess this security control:\n\n" + INPUT }]);
@@ -248,6 +250,8 @@ describe("model calls", () => {
     expect(sent.model).toBe("claude-opus-5");
     expect(sent.max_tokens).toBe(4000);
     expect(sent.output_config).toEqual({ effort: "medium" });
+    // Opus 5 rejects sampling parameters.
+    expect(sent).not.toHaveProperty("temperature");
     expect(sent.system).toContain("CC9.9: (no verified definition");
     expect(sent.messages[0].content).toBe("Situation being assessed:\n\n" + INPUT);
   });
