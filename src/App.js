@@ -264,8 +264,11 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "claude-haiku-4-5-20251001",
-              max_tokens: 1000,
+              // The fit judgment needs a stronger model than the main call;
+              // Haiku repeatedly misjudged which criteria cover MFA.
+              model: "claude-opus-5",
+              max_tokens: 4000,
+              output_config: { effort: "medium" },
               system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Also judge whether each control is a good fit. Judge by the substance of the definition, not its exact wording: an activity that clearly falls within the definition's scope counts even if the definition does not name it. Set relevant to false only if the situation does not describe anything the definition governs, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process; otherwise set relevant to true. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean.\n\nVerified control definitions:\n" + defsText,
               messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
             })
