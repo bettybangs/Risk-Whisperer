@@ -1,22 +1,17 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+// POST /api/assess  body: { framework, env, family, input }
+// Runs the main assessment on Haiku. Protections are described in api/_security.js.
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify(req.body)
-    });
+import { buildAssessRequest } from "./_prompts.js";
+import { createHandler, validateAssessBody, HttpError } from "./_security.js";
+import { callClaude, parseModelJson } from "./_claude.js";
 
-    const data = await response.json();
-    return res.status(response.status).json(data);
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
+export default createHandler({
+  validate: validateAssessBody,
+  run: async function(data) {
+    var result = parseModelJson(await callClaude(buildAssessRequest(data)));
+    if (result === null || typeof result !== "object" || Array.isArray(result)) {
+      throw new HttpError(502, "Unexpected JSON from the AI. Please try again.");
+    }
+    return { result };
   }
-}
+});
