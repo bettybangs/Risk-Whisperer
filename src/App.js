@@ -249,23 +249,31 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
       var text = data.content.find(function(b) { return b.type === "text"; })?.text || "";
       var parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
 
-      // Rewrite rationales for controls with verified definitions, so the
-      // explanation stays within what the real AICPA criterion covers.
+      // Check mapped controls: rewrite the rationale for those with verified
+      // definitions so it stays within what the real AICPA criterion covers,
+      // and flag (never remove) any the input doesn't clearly describe. For
+      // SOC 2, controls without a verified definition are judged too, from
+      // the model's own knowledge, and their flags say so.
       var flagged = (parsed.controlMappings || []).filter(function(c) {
-        return SOC2_GROUNDED_DEFINITIONS[c.id];
+        return SOC2_GROUNDED_DEFINITIONS[c.id] || framework.startsWith("SOC 2");
       });
       if (flagged.length > 0) {
         var defsText = flagged.map(function(c) {
-          return c.id + ": " + SOC2_GROUNDED_DEFINITIONS[c.id];
+          return SOC2_GROUNDED_DEFINITIONS[c.id]
+            ? c.id + ": " + SOC2_GROUNDED_DEFINITIONS[c.id]
+            : c.id + ": (no verified definition — judge fit from your knowledge of the 2017 Trust Services Criteria)";
         }).join("\n");
         try {
           var groundRes = await fetch("/api/assess", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "claude-haiku-4-5-20251001",
-              max_tokens: 500,
-              system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, rationale}.\n\nVerified control definitions:\n" + defsText,
+              // The fit judgment needs a stronger model than the main call;
+              // Haiku repeatedly misjudged which criteria cover MFA.
+              model: "claude-opus-5",
+              max_tokens: 4000,
+              output_config: { effort: "medium" },
+              system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source (or, where none is available, a note saying so), plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Also judge whether each control is a good fit. Judge by the substance of the definition, not its exact wording: an activity that clearly falls within the definition's scope counts even if the definition does not name it. Set relevant to false only if the situation does not describe anything the definition governs, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process; otherwise set relevant to true. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean.\n\nControl definitions:\n" + defsText,
               messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
             })
           });
@@ -274,9 +282,16 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             var groundText = groundData.content.find(function(b) { return b.type === "text"; })?.text || "";
             var grounded = JSON.parse(groundText.replace(/```json|```/g, "").trim());
             var groundedMap = {};
-            grounded.forEach(function(g) { groundedMap[g.id] = g.rationale; });
+            var weakFitMap = {};
+            grounded.forEach(function(g) {
+              if (g.relevant === false) weakFitMap[g.id] = g.rationale;
+              else groundedMap[g.id] = g.rationale;
+            });
             parsed.controlMappings = parsed.controlMappings.map(function(c) {
-              return groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
+              var verified = !!SOC2_GROUNDED_DEFINITIONS[c.id];
+              if (weakFitMap[c.id]) return { ...c, weakFit: weakFitMap[c.id], weakFitUnverified: !verified };
+              // Only verified definitions may replace the original rationale.
+              return verified && groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
             });
           }
         } catch (e) {
@@ -641,7 +656,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   })}
 </Card>
 
-               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale; }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
+               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale + (c.weakFit ? " (Weak fit: " + c.weakFit + (c.weakFitUnverified ? " — judged without a verified definition" : "") + ")" : ""); }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
     {result.controlMappings.map(function(c, i) {
       return framework.indexOf("NIST") === 0 ? (
@@ -657,6 +672,11 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
               return (
                 <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
                   <strong style={{ color: "#f5ead8" }}>{c.id} - {displayName}:</strong> {c.rationale}
+{c.weakFit && (
+  <span style={{ display: "block", fontSize: 11, color: "#e0a040", marginTop: 4 }}>
+    ⚠ Weak fit: {c.weakFit}{c.weakFitUnverified && " (judged without a verified definition)"}
+  </span>
+)}
 {!SOC2_CONTROLS[c.id] && framework.startsWith("SOC 2") && (
   <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
     Control name AI-generated, not yet verified against source
