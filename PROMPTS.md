@@ -57,7 +57,7 @@ The mapping key is `controlMappings`, not `nistControls`, because IDs must be na
 
 Only include a control if the input directly and specifically describes an activity, system, or process that control governs. Do not include a control because it is commonly associated with the topic, because a related control might apply, or because the organization "should" have it. An inferred gap ("no evidence of X") is a reason to exclude, not include. Every rationale must cite specific words or facts from the input. This is why the prompt asks for 1 to 6 mappings rather than a fixed minimum: forcing a minimum count pushed the model to pad the list with loosely related controls.
 
-The prompt also asks the model to re-read each rationale before answering and delete any control whose own rationale hedges: says the input does not describe it, that it cannot be fully mapped, that evidence is missing, or that the fit is only implied. Without that step, Haiku sometimes listed a control and then explained in the rationale that it was "not included here" or "cannot be fully mapped".
+Haiku still sometimes lists a control and then hedges in its own rationale ("cannot be fully mapped", "not included here"). Asking it to re-read and delete those controls was tried and did not work: the model writes its answer in one pass and does not go back and remove what it already wrote. Catching these is the judge's job, and it flags them as weak fits.
 
 ### 5a. Consistency
 

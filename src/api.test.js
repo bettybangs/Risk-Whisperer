@@ -187,7 +187,6 @@ describe("model calls", () => {
     expect(sent.max_tokens).toBe(6000);
     expect(sent.temperature).toBe(0);
     expect(sent.system).toContain("Focus on the Access Control control family.");
-    expect(sent.system).toContain("delete that control from the list");
     expect(sent.system).toContain("such as multi-factor authentication");
     expect(sent.system).toContain("SOC 2 Type I examination");
     expect(sent.system).toContain("CC6.1: The entity implements logical access security software");
