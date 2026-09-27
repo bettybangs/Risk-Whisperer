@@ -2,9 +2,10 @@
 
 import { HttpError } from "./_security.js";
 
-// Stop waiting a little before Vercel's 30-second function limit so the
-// browser gets a JSON error instead of a platform timeout page.
-const UPSTREAM_TIMEOUT_MS = 27000;
+// Stop waiting a little before the function limit (maxDuration: 60 in
+// vercel.json) so the browser gets a JSON error instead of a platform
+// timeout page. A full Haiku assessment can take longer than 30 seconds.
+const UPSTREAM_TIMEOUT_MS = 55000;
 
 export async function callClaude(request) {
   if (!process.env.ANTHROPIC_API_KEY) {

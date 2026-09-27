@@ -39,7 +39,7 @@
 //
 // 7. Clear JSON errors and a time limit. Every failure returns
 //    { error: { message } }, which the app already displays. The upstream
-//    call is aborted before Vercel's 30-second function limit so the user
+//    call is aborted before the 60-second function limit so the user
 //    sees a message instead of a platform timeout page. Each endpoint makes
 //    exactly one model call, so no request chains Haiku and Opus.
 

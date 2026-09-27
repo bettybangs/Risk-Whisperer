@@ -86,7 +86,7 @@ When the user switches to Plain Talk, `/api/plain` sends the assessment to a com
 | Constrained enum values | Unexpected values cannot break UI rendering logic. |
 | 6000 max tokens for assessment and Plain Talk | Enough for the full structured output, including the SOC 2 criteria text in the prompt, without truncation. |
 | A separate, stronger judge | A second model checking against the official text catches mappings the first model stretched. |
-| Separate endpoints | Each request makes one model call, so each stays under the 30-second function limit. |
+| Separate endpoints | Each request makes one model call, so each stays within the 60-second function limit. |
 
 ## Security
 

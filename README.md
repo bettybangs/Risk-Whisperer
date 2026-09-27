@@ -150,8 +150,9 @@ Browser ──{ result }──────────────────�
 | `api/assess.js`, `api/judge.js`, `api/plain.js` | One endpoint per model call |
 | `src/App.js` | The React UI; it sends data only and keeps `SOC2_CONTROLS` for display names |
 | `src/options.js` | Dropdown values, tested to match the server's allowed lists |
+| `vercel.json` | Gives each API function up to 60 seconds |
 
-Each model call is its own request, so no single function runs Haiku and Opus back to back and each stays under Vercel's 30-second function limit.
+Each model call is its own request, so no single function runs Haiku and Opus back to back and each stays within the 60-second function limit set in `vercel.json`.
 
 ---
 
@@ -165,7 +166,7 @@ All prompts are built on the server. The browser never sends a prompt, a model n
 - **Prompt-injection screen.** The same patterns the browser checks (for example "ignore previous instructions" or "system prompt") are checked again on the server, since anyone can call the endpoints directly. The browser check stays for instant feedback.
 - **POST only.** Other methods get a 405.
 - **Origin allowlist.** Only `https://riskwhisperer.vercel.app`, this project's own `*.vercel.app` preview URLs, and `localhost` during development are accepted. The server also requires `Content-Type: application/json`, which blocks cross-site form posts. An origin check is not authentication, so the validation above applies to every request.
-- **Clear errors.** Every failure returns `{ "error": { "message": "..." } }`, which the app displays. Upstream calls stop before the 30-second function limit so users see a message instead of a timeout page.
+- **Clear errors.** Every failure returns `{ "error": { "message": "..." } }`, which the app displays. Upstream calls stop at 55 seconds, before the 60-second function limit, so users see a message instead of a timeout page.
 
 The comment block at the top of `api/_security.js` explains each protection in the code.
 
