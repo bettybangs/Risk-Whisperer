@@ -57,9 +57,44 @@ export async function callClaude(request) {
   return text;
 }
 
+// Replace every em-dash (U+2014) in a string. The prompts already ask the
+// models not to use them; this is the safety net. A dash between words
+// becomes ", ". Next to punctuation it is dropped instead, so there is no
+// doubled punctuation, and at the start or end of the text it is removed.
+export function replaceEmDashes(text) {
+  if (text.indexOf("\u2014") === -1) return text;
+  var out = text.replace(/\s*\u2014+\s*/g, function(match, offset, str) {
+    var before = str.slice(0, offset);
+    var after = str.slice(offset + match.length);
+    if (before === "" || after === "") return "";
+    if (/[,;:.!?]$/.test(before)) return " ";
+    if (/[(\[]$/.test(before) || /^[,;:.!?)\]]/.test(after)) return "";
+    return ", ";
+  });
+  return out;
+}
+
+// Apply replaceEmDashes to every string in a parsed reply (objects, arrays,
+// and nested values). Keys and non-string values are left alone.
+export function stripEmDashes(value) {
+  if (typeof value === "string") return replaceEmDashes(value);
+  if (Array.isArray(value)) return value.map(stripEmDashes);
+  if (value !== null && typeof value === "object") {
+    var out = {};
+    Object.keys(value).forEach(function(k) { out[k] = stripEmDashes(value[k]); });
+    return out;
+  }
+  return value;
+}
+
 // Parse the model's JSON reply, tolerating the code fences it sometimes adds
-// and any sentence it puts before or after the JSON.
+// and any sentence it puts before or after the JSON. Every string in the
+// result has its em-dashes replaced before it is returned.
 export function parseModelJson(text) {
+  return stripEmDashes(parseJsonReply(text));
+}
+
+function parseJsonReply(text) {
   var cleaned = text.replace(/```json|```/g, "").trim();
   try {
     return JSON.parse(cleaned);

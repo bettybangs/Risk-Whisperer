@@ -6,6 +6,7 @@ import judgeHandler from "../api/judge";
 import plainHandler from "../api/plain";
 import * as serverPrompts from "../api/_prompts";
 import { isAllowedOrigin } from "../api/_security";
+import { replaceEmDashes, stripEmDashes } from "../api/_claude";
 import { FRAMEWORKS, ENVS, CONTROL_FAMILIES } from "./options";
 
 const ORIGIN = "https://riskwhisperer.vercel.app";
@@ -274,5 +275,74 @@ describe("model calls", () => {
     expect(sent.model).toBe("claude-haiku-4-5-20251001");
     expect(sent.max_tokens).toBe(6000);
     expect(sent.messages[0].content).toBe("Translate these GRC findings into plain business language:\n\n" + JSON.stringify(ASSESSMENT));
+  });
+});
+
+// Written as an escape so this file contains no em-dash characters.
+const EM = "\u2014";
+
+describe("em-dash removal", () => {
+  test("replaceEmDashes turns a dash between words into a comma", () => {
+    expect(replaceEmDashes("Scope " + EM + " access")).toBe("Scope, access");
+    expect(replaceEmDashes("word" + EM + "word")).toBe("word, word");
+    expect(replaceEmDashes("one " + EM + " two " + EM + " three")).toBe("one, two, three");
+    expect(replaceEmDashes("a " + EM + EM + " b")).toBe("a, b");
+  });
+
+  test("replaceEmDashes avoids doubled punctuation and stray commas", () => {
+    expect(replaceEmDashes("a, " + EM + " b")).toBe("a, b");
+    expect(replaceEmDashes("done. " + EM + " Next")).toBe("done. Next");
+    expect(replaceEmDashes("x " + EM + ", y")).toBe("x, y");
+    expect(replaceEmDashes("x " + EM + ". Next")).toBe("x. Next");
+    expect(replaceEmDashes("(" + EM + "note)")).toBe("(note)");
+    expect(replaceEmDashes("(note " + EM + ")")).toBe("(note)");
+    expect(replaceEmDashes(EM + " Start")).toBe("Start");
+    expect(replaceEmDashes("End " + EM)).toBe("End");
+  });
+
+  test("replaceEmDashes leaves other text and other dashes alone", () => {
+    expect(replaceEmDashes("no dashes here")).toBe("no dashes here");
+    expect(replaceEmDashes("least-privilege 2024\u20132025")).toBe("least-privilege 2024\u20132025");
+  });
+
+  test("stripEmDashes cleans every string in nested results and keeps other values", () => {
+    expect(stripEmDashes({ a: ["x" + EM + "y", { b: "c " + EM + " d", n: 5, t: true, z: null }] }))
+      .toEqual({ a: ["x, y", { b: "c, d", n: 5, t: true, z: null }] });
+  });
+
+  test("all three system prompts forbid em-dashes and contain none", () => {
+    const requests = [
+      serverPrompts.buildAssessRequest({ framework: "SOC 2 Type II", env: "AWS", family: "Access Control", input: INPUT }),
+      serverPrompts.buildAssessRequest({ framework: "NIST SP 800-53 Rev 5", env: "Azure", family: "Any (Auto-detect)", input: INPUT }),
+      serverPrompts.buildJudgeRequest({ input: INPUT, controls: [{ id: "CC6.1" }, { id: "CC9.9" }] }),
+      serverPrompts.buildPlainRequest({ result: ASSESSMENT })
+    ];
+    for (const r of requests) {
+      expect(r.system).toContain(serverPrompts.NO_EM_DASH_RULE.trim());
+      expect(r.system).not.toContain(EM);
+    }
+  });
+
+  test("assess strips em-dashes from the model's reply", async () => {
+    mockClaude(JSON.stringify({ ...ASSESSMENT, riskJustification: "Moderate risk " + EM + " MFA is enforced.", assessmentQuestions: ["Who reviews access" + EM + "and how often?"] }));
+    const res = await call(assessHandler, makeReq({ framework: "GDPR", env: "GCP", family: "Any (Auto-detect)", input: INPUT }));
+    expect(res.statusCode).toBe(200);
+    expect(res.body.result.riskJustification).toBe("Moderate risk, MFA is enforced.");
+    expect(res.body.result.assessmentQuestions).toEqual(["Who reviews access, and how often?"]);
+    expect(JSON.stringify(res.body)).not.toContain(EM);
+  });
+
+  test("judge strips em-dashes from rationales", async () => {
+    mockClaude(JSON.stringify([{ id: "CC6.1", relevant: false, rationale: "Covers access software " + EM + " not described here." }]));
+    const res = await call(judgeHandler, makeReq({ framework: "SOC 2 Type II", input: INPUT, controlMappings: [{ id: "CC6.1", name: "a", rationale: "b" }] }));
+    expect(res.statusCode).toBe(200);
+    expect(res.body.judgments[0].rationale).toBe("Covers access software, not described here.");
+  });
+
+  test("plain strips em-dashes from nested weaknesses", async () => {
+    mockClaude(JSON.stringify({ potentialWeaknessesPlain: [{ name: "Gap", description: "People can log in " + EM + " without a second step.", severity: "High", recommendation: "Turn it on." }] }));
+    const res = await call(plainHandler, makeReq({ result: ASSESSMENT }));
+    expect(res.statusCode).toBe(200);
+    expect(res.body.plain.potentialWeaknessesPlain[0].description).toBe("People can log in, without a second step.");
   });
 });

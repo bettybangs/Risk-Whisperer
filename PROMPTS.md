@@ -73,6 +73,10 @@ Both definition notes are read by the assessment and the judge.
 
 `severity` is limited to High, Medium, or Low. Values like "Critical" or "Informational" would break the color coding in the UI.
 
+### 7. No Em-Dashes
+
+All three system prompts (assessment, judge, and Plain Talk) end with the same rule: never use em-dashes, and use commas, colons, periods, or parentheses instead. The prompt wording itself contains no em-dashes either, so the model is not shown the style it is told to avoid. As a safety net, the server replaces any em-dash still left in a parsed response before returning it (`replaceEmDashes` in `api/_claude.js`): a dash between words becomes a comma and a space, a dash next to other punctuation is dropped so punctuation is never doubled, and a dash at the start or end of a string is removed.
+
 ## The Judge Call (Opus 5)
 
 After the assessment, the app sends the mapped controls to `/api/judge` in a separate request. The judge runs on Claude Opus 5 with medium effort and 4000 max tokens, because Haiku repeatedly misjudged which criteria cover MFA.
