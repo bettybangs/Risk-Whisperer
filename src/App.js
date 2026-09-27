@@ -249,8 +249,9 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
       var text = data.content.find(function(b) { return b.type === "text"; })?.text || "";
       var parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
 
-      // Rewrite rationales for controls with verified definitions, so the
-      // explanation stays within what the real AICPA criterion covers.
+      // Check controls that have verified definitions: drop any the input
+      // doesn't actually describe, and rewrite the rationale for the rest so
+      // it stays within what the real AICPA criterion covers.
       var flagged = (parsed.controlMappings || []).filter(function(c) {
         return SOC2_GROUNDED_DEFINITIONS[c.id];
       });
@@ -264,8 +265,8 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               model: "claude-haiku-4-5-20251001",
-              max_tokens: 500,
-              system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, rationale}.\n\nVerified control definitions:\n" + defsText,
+              max_tokens: 1000,
+              system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source, plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its verified definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point — treat it as a hard constraint, not a style preference. Also decide whether each control belongs in the assessment at all: set relevant to true only if the situation directly and specifically describes an activity, system, or process that the verified definition governs. Set relevant to false if the connection is indirect, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean.\n\nVerified control definitions:\n" + defsText,
               messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
             })
           });
@@ -274,10 +275,18 @@ if (suspiciousPatterns.some(function(p) { return p.test(input); })) {
             var groundText = groundData.content.find(function(b) { return b.type === "text"; })?.text || "";
             var grounded = JSON.parse(groundText.replace(/```json|```/g, "").trim());
             var groundedMap = {};
-            grounded.forEach(function(g) { groundedMap[g.id] = g.rationale; });
-            parsed.controlMappings = parsed.controlMappings.map(function(c) {
-              return groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
+            var removed = [];
+            grounded.forEach(function(g) {
+              if (g.relevant === false) removed.push({ id: g.id, reason: g.rationale });
+              else groundedMap[g.id] = g.rationale;
             });
+            var removedIds = removed.map(function(r) { return r.id; });
+            parsed.controlMappings = parsed.controlMappings
+              .filter(function(c) { return removedIds.indexOf(c.id) === -1; })
+              .map(function(c) {
+                return groundedMap[c.id] ? { ...c, rationale: groundedMap[c.id] } : c;
+              });
+            parsed.removedMappings = removed;
           }
         } catch (e) {
           // grounding call failed — keep the original rationale rather than breaking the assessment
@@ -671,6 +680,14 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
               );
             })}
                   </ul>
+                  {result.removedMappings?.length > 0 && (
+                    <div style={{ marginTop: 12, fontSize: 11, color: "#a89060", fontStyle: "italic", lineHeight: 1.6 }}>
+                      Removed after checking against verified definitions:
+                      {result.removedMappings.map(function(r, i) {
+                        return <div key={i}>{r.id}: {r.reason}</div>;
+                      })}
+                    </div>
+                  )}
                 </Card>
               </div>
             </>
