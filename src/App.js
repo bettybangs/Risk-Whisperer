@@ -188,6 +188,7 @@ const SOC2_GROUNDED_DEFINITIONS = {
   "CC7.2": "The entity monitors system components and the operation of those components for anomalies that are indicative of malicious acts, natural disasters, and errors affecting the entity's ability to meet its objectives; anomalies are analyzed to determine whether they represent security events.",
   "CC7.3": "The entity evaluates security events to determine whether they could or have resulted in a failure of the entity to meet its objectives (security incidents) and, if so, takes actions to prevent or address such failures. Executing a defined incident response program is CC7.4, not CC7.3.",
   "CC7.4": "The entity responds to identified security incidents by executing a defined incident response program to understand, contain, remediate, and communicate about the incident, as appropriate.",
+  "CC7.5": "The entity identifies, develops, and implements activities to recover from identified security incidents.",
   "CC8.1": "The entity authorizes, designs, develops or acquires, configures, documents, tests, approves, and implements changes to infrastructure, data, software, and procedures to meet its objectives.",
   "CC9.1": "The entity identifies, selects, and develops risk mitigation activities for risks arising from potential business disruptions.",
   "CC9.2": "The entity assesses and manages risks associated with vendors and business partners.",
