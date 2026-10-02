@@ -227,4 +227,6 @@ See [PROMPTS.md](PROMPTS.md) for the prompt design.
 
 ---
 
+Companion project: [grc-evidence-collector](https://github.com/bettybangs/grc-evidence-collector) checks that specific technical controls are actually enforced and saves timestamped evidence. Risk Whisperer assesses controls from a written description; the collector verifies them in the live system.
+
 *Risk Whisperer is a portfolio and educational tool. Outputs should be reviewed by a qualified GRC professional before use in formal audits or compliance programs.*
