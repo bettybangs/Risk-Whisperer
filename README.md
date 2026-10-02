@@ -3,6 +3,8 @@
 
 Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security controls against major compliance frameworks. Paste in a control description or system detail and instantly receive assessment questions, evidence requirements, potential weaknesses with remediation recommendations, and framework control mappings: the same outputs a senior GRC analyst would produce manually.
 
+[![Tests](https://github.com/bettybangs/Risk-Whisperer/actions/workflows/test.yml/badge.svg)](https://github.com/bettybangs/Risk-Whisperer/actions/workflows/test.yml)
+
 🔗 **Live app:** [riskwhisperer.vercel.app](https://riskwhisperer.vercel.app)
 
 ### 💻 Tech Talk View
@@ -10,6 +12,22 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 ### 💬 Plain Talk View
 ![Plain Talk View](screenshot-plain-talk.png)
+
+---
+
+## Sample Run
+
+Real input and the headline results from the app (framework: NIST SP 800-53 Rev 5, environment: AWS). The full report is in the Tech Talk screenshot above.
+
+> **Input:** Our AWS environment uses IAM roles with least-privilege policies attached to all EC2 instances and Lambda functions. There are no IAM users with programmatic access keys in production. MFA is enforced on all human IAM users via a Service Control Policy at the AWS Organizations level.
+
+| Output | Result |
+|---|---|
+| Risk Score | 4 / 10 |
+| Control Maturity | Managed |
+| Why | Strong foundations (least-privilege roles, no static credentials, enforced MFA). Moderate risk remains from missing continuous policy validation, incomplete cross-account and service-to-service role controls, and no documented privilege escalation detection. |
+
+Assessment questions, evidence to collect, weaknesses with recommendations, and control mappings are generated for the same input and can be expanded in the app.
 
 ---
 
@@ -68,21 +86,23 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 ## Supported Frameworks (15)
 
-- NIST SP 800-53 Rev 5
-- NIST CSF 2.0
-- FedRAMP Moderate
-- FedRAMP High
-- CIS Controls v8
-- ISO 27001:2022
-- SOC 2 Type I
-- SOC 2 Type II
-- PCI DSS v4.0
-- HIPAA Security Rule
-- CMMC 2.0
-- CISA Zero Trust Maturity Model
-- NIST SP 800-171
-- NERC CIP
-- GDPR
+| Framework | Area |
+|---|---|
+| NIST SP 800-53 Rev 5 | US federal security controls |
+| NIST SP 800-171 | Protecting controlled unclassified information |
+| NIST CSF 2.0 | Cybersecurity risk management |
+| FedRAMP Moderate / High | US federal cloud authorization |
+| CMMC 2.0 | US defense contractors |
+| CISA Zero Trust Maturity Model | Zero trust adoption |
+| ISO 27001:2022 | International ISMS standard |
+| SOC 2 Type I / Type II | Trust Services Criteria, with a verified AICPA reference and judge check (see above) |
+| CIS Controls v8 | Prioritized security safeguards |
+| PCI DSS v4.0 | Payment card data |
+| HIPAA Security Rule | Health information |
+| NERC CIP | Electric grid reliability |
+| GDPR | EU data protection |
+
+Only SOC 2 has the verified criteria reference and the judge check. For the other frameworks, control IDs and names are AI-generated and should be checked against the source.
 
 ## Supported Cloud Environments
 
@@ -135,11 +155,20 @@ Add `ANTHROPIC_API_KEY` as an environment variable in your Vercel project settin
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    A[Browser: input + dropdowns] --> B[Client injection check]
+    B --> C["/api/assess<br/>origin, method, content-type,<br/>field + size validation,<br/>server injection screen"]
+    C --> D[Claude Haiku 4.5<br/>server-side prompt]
+    D --> E[Assessment JSON]
+    E --> F["/api/judge<br/>same validation"]
+    F --> G[Claude Opus 5<br/>checks mappings vs AICPA text]
+    G --> H[Report: weak fits flagged]
+    H --> I["/api/plain<br/>on demand"]
+    H --> J[PDF export + POA&M tracking]
 ```
-Browser ──{ framework, env, family, input }──────► /api/assess ──► Anthropic API (Haiku 4.5)
-Browser ──{ framework, input, controlMappings }──► /api/judge  ──► Anthropic API (Opus 5)
-Browser ──{ result }─────────────────────────────► /api/plain  ──► Anthropic API (Haiku 4.5)
-```
+
+Each endpoint is its own request, and the API key lives only in the Vercel environment.
 
 | File | Purpose |
 |---|---|
@@ -169,6 +198,22 @@ All prompts are built on the server. The browser never sends a prompt, a model n
 - **Clear errors.** Every failure returns `{ "error": { "message": "..." } }`, which the app displays. Upstream calls stop at 55 seconds, before the 60-second function limit, so users see a message instead of a timeout page.
 
 The comment block at the top of `api/_security.js` explains each protection in the code.
+
+---
+
+## Tests
+
+`npm test` runs 27 tests (`src/api.test.js`, `src/App.test.js`) against the API handlers with the Anthropic call mocked. They cover method, origin, and content-type checks, rejection of browser-supplied prompts and model names, field and size validation, the model settings each endpoint uses, error mapping, and em-dash removal. GitHub Actions runs them on every push and pull request.
+
+---
+
+## Known Limitations
+
+- **Injection screening is pattern-based.** It catches common phrases, not every paraphrase, and it can flag legitimate input that contains words like "expose" or "leak". Server-side prompts and strict output validation are the stronger defenses.
+- **No authentication or rate limiting.** The origin allowlist is not authentication. Anyone who can reach the app can spend API quota.
+- **Only SOC 2 is verified.** Other frameworks' control IDs and names come from the model.
+- **No server-side storage.** History and POA&M entries live in the browser's localStorage.
+- **A model, not an auditor.** Outputs are a starting point for a qualified reviewer.
 
 ---
 
