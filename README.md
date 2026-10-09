@@ -51,23 +51,23 @@ Assessment questions, evidence to collect, weaknesses with recommendations, and 
 | Step | Model | Endpoint | What it does |
 |---|---|---|---|
 | Assessment | Claude Haiku 4.5 (6000 max tokens, temperature 0) | `/api/assess` | Produces the full assessment as JSON, including 1 to 6 `controlMappings` |
-| Judge | Claude Opus 5 (4000 max tokens, medium effort) | `/api/judge` | Checks each mapped control against the official AICPA 2017 Trust Services Criteria text and flags weak fits |
+| Judge | Claude Opus 5 (4000 max tokens, medium effort) | `/api/judge` | Checks each mapped control against verified summaries of the AICPA 2017 Trust Services Criteria and flags weak fits |
 | Plain Talk | Claude Haiku 4.5 (6000 max tokens) | `/api/plain` | Rewrites the findings in plain business language, on demand |
 
 **Strict inclusion rule.** The assessment prompt tells the model to map a control only when the input directly and specifically describes something that control governs. A control that is merely related to the topic, or that would apply only because something is missing, is left out. Every rationale must cite words or facts from the input.
 
-**The judge.** After the assessment, the app sends the mapped controls to `/api/judge`. The judge is grounded in the official AICPA 2017 Trust Services Criteria text for all 61 criteria (CC1.1 through P8.1). For each control it writes a rationale that stays within what the criterion actually covers and decides whether the control is a good fit. For SOC 2, every mapped control is judged; for other frameworks, only controls that have an official SOC 2 definition are judged. If the judge call fails, the assessment is shown with its original rationales.
+**The judge.** After the assessment, the app sends the mapped controls to `/api/judge`. The judge is grounded in verified summaries of the AICPA 2017 Trust Services Criteria for all 61 criteria (CC1.1 through P8.1). For each control it writes a rationale that stays within what the criterion actually covers and decides whether the control is a good fit. For SOC 2, every mapped control is judged; for other frameworks, only controls that have a verified SOC 2 summary are judged. If the judge call fails, the assessment is shown with its original rationales.
 
 **Flag, never delete.** A control the judge considers a weak fit stays in the list with a ⚠ Weak fit note explaining what the criterion covers that the input does not describe. Nothing is silently removed, so the reviewer makes the final call.
 
-**Verified vs AI-generated labels.** For SOC 2, each mapping shows either "Control name verified · explanation AI-generated" (the name comes from the app's table checked against the AICPA source) or "Control name AI-generated, not yet verified against source". A weak-fit flag on a control with no official definition says it was "judged without a verified definition". Only controls with an official definition may have their rationale rewritten by the judge.
+**Verified vs AI-generated labels.** For SOC 2, each mapping shows either "Control name verified · explanation AI-generated" (the name comes from the app's table checked against the AICPA source) or "Control name AI-generated, not yet verified against source". A weak-fit flag on a control with no verified summary says it was "judged without a verified definition". Only controls with a verified summary may have their rationale rewritten by the judge.
 
 ---
 
 ## Features
 
 - 💻 **Tech Talk / 💬 Plain Talk toggle**: switch output between GRC technical language and plain language for executives, legal, or finance stakeholders. The translation is generated on demand by a separate call and cached, so toggling back and forth is instant
-- ⚖️ **Second-opinion judge**: Opus 5 checks every SOC 2 mapping against the official criteria text and flags weak fits without deleting them
+- ⚖️ **Second-opinion judge**: Opus 5 checks every SOC 2 mapping against verified summaries of the AICPA 2017 Trust Services Criteria and flags weak fits without deleting them
 - 🏷 **Verified vs AI-generated labels**: see at a glance which control names were checked against the AICPA source
 - 🧾 **SOC 2 Type I and Type II**: Type I focuses on design and point-in-time evidence; Type II focuses on operating effectiveness across an observation period
 - 🔒 **Server-side prompts**: prompts, model choice, and the API key all live on the server (see Security below)
@@ -172,7 +172,7 @@ Each endpoint is its own request, and the API key lives only in the Vercel envir
 
 | File | Purpose |
 |---|---|
-| `api/_prompts.js` | Every system prompt, the SOC 2 reference text, the official AICPA text for all 61 criteria, and the model settings |
+| `api/_prompts.js` | Every system prompt, the SOC 2 reference text, verified summaries of the AICPA 2017 Trust Services Criteria for all 61 criteria, and the model settings |
 | `api/_security.js` | Origin, method, and content-type checks, field validation, and the prompt-injection screen |
 | `api/_claude.js` | The single Anthropic API call, with the key and a time limit |
 | `api/assess.js`, `api/judge.js`, `api/plain.js` | One endpoint per model call |

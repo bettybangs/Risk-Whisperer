@@ -36,7 +36,7 @@ For SOC 2, the prompt adds:
 
 - A reference to the real Trust Services Criteria numbering (CC1 through CC9, A1, C1, PI1, P1 through P8), with a warning not to borrow ISO 27001 Annex A domain names.
 - Examination guidance. **SOC 2 Type I** evaluates whether controls are suitably designed and implemented as of a point in time, so questions focus on design and evidence is point-in-time. **SOC 2 Type II** evaluates operating effectiveness over an observation period, so questions cover consistency over time and evidence includes populations and samples across the period.
-- The official AICPA 2017 Trust Services Criteria text for all 61 criteria, with the instruction to choose `controlMappings` IDs only from that list, by matching what the input describes against what each criterion covers.
+- Verified summaries of the AICPA 2017 Trust Services Criteria for all 61 criteria, with the instruction to choose `controlMappings` IDs only from that list, by matching what the input describes against what each criterion covers.
 
 ### 4. Structured JSON Output
 
@@ -81,11 +81,11 @@ All three system prompts (assessment, judge, and Plain Talk) end with the same r
 
 After the assessment, the app sends the mapped controls to `/api/judge` in a separate request. The judge runs on Claude Opus 5 with medium effort and 4000 max tokens, because Haiku repeatedly misjudged which criteria cover MFA.
 
-- **Grounded in the official text.** For each control, the judge receives its official AICPA 2017 Trust Services Criteria definition. All 61 criteria are available. A few definitions carry "Do NOT" notes (for example, CC6.8 is not about generic OS patching unless anti-malware is mentioned), and the judge must treat those as hard constraints.
-- **What gets judged.** For SOC 2, every mapped control is judged. A control with no official definition is judged from the model's own knowledge of the criteria. For other frameworks, only controls that have an official SOC 2 definition are judged, so most non-SOC 2 assessments need no model call.
+- **Grounded in verified summaries.** For each control, the judge receives its verified summary of the AICPA 2017 Trust Services Criteria. All 61 criteria are available. A few definitions carry "Do NOT" notes (for example, CC6.8 is not about generic OS patching unless anti-malware is mentioned), and the judge must treat those as hard constraints.
+- **What gets judged.** For SOC 2, every mapped control is judged. A control with no verified summary is judged from the model's own knowledge of the criteria. For other frameworks, only controls that have a verified SOC 2 summary are judged, so most non-SOC 2 assessments need no model call.
 - **Output.** A JSON array of `{id, relevant, rationale}`. The judge reads the definition by substance, not exact wording, and sets `relevant` to false only if the input describes nothing the criterion governs, if the control is merely associated with the topic, or if it would apply only because of a missing process.
 - **Flag, never delete.** A control with `relevant: false` stays in the list with a ⚠ Weak fit note explaining what the criterion covers that the input does not describe. Nothing is silently removed.
-- **Verified vs AI-generated.** The server marks each judgment as verified only when an official definition exists; the model cannot claim that. Only verified controls may have their rationale replaced by the judge's version. A weak fit on an unverified control is labeled "judged without a verified definition". Separately, each SOC 2 mapping shows "Control name verified · explanation AI-generated" when its display name comes from the app's AICPA-checked name table, or "Control name AI-generated, not yet verified against source" otherwise.
+- **Verified vs AI-generated.** The server marks each judgment as verified only when a verified summary exists; the model cannot claim that. Only verified controls may have their rationale replaced by the judge's version. A weak fit on an unverified control is labeled "judged without a verified definition". Separately, each SOC 2 mapping shows "Control name verified · explanation AI-generated" when its display name comes from the app's AICPA-checked name table, or "Control name AI-generated, not yet verified against source" otherwise.
 - **Graceful fallback.** If the judge call fails for any reason, the assessment is shown with its original rationales.
 
 ## The Plain Talk Prompt (Haiku 4.5)
@@ -102,7 +102,7 @@ When the user switches to Plain Talk, `/api/plain` sends the assessment to a com
 | Constrained enum values | Unexpected values cannot break UI rendering logic. |
 | Temperature 0 for the assessment | Repeat runs on the same input produce the same mappings far more often. |
 | 6000 max tokens for assessment and Plain Talk | Enough for the full structured output, including the SOC 2 criteria text in the prompt, without truncation. |
-| A separate, stronger judge | A second model checking against the official text catches mappings the first model stretched. |
+| A separate, stronger judge | A second model checking against verified summaries of the AICPA 2017 Trust Services Criteria catches mappings the first model stretched. |
 | Separate endpoints | Each request makes one model call, so each stays within the 60-second function limit. |
 
 ## Security
@@ -123,5 +123,5 @@ See the comment block at the top of `api/_security.js` for the reasoning behind 
 - **Name your keys exactly.** Vague instructions like "return a list of questions" produce inconsistent key names across responses.
 - **Inject context, don't repeat prompts.** Dynamic injection kept the codebase clean and the prompt maintainable.
 - **Constrain open-ended fields.** Any field that drives UI logic (colors, labels) needs an explicit list of allowed values.
-- **Ground the model in the source.** Giving the model the official criteria text works better than trusting it to recall what a control number means.
+- **Ground the model in the source.** Giving the model verified summaries of the AICPA 2017 Trust Services Criteria works better than trusting it to recall what a control number means.
 - **Flag, don't filter.** Showing a weak fit with an explanation keeps the reviewer in control and makes model mistakes visible.
