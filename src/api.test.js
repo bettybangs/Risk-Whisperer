@@ -73,7 +73,7 @@ test("client dropdown lists match the server's allowed lists", () => {
   expect(FRAMEWORKS).toHaveLength(15);
 });
 
-test("server holds the official text for all 61 SOC 2 criteria", () => {
+test("server holds verified summaries for all 61 SOC 2 criteria", () => {
   expect(Object.keys(serverPrompts.SOC2_GROUNDED_DEFINITIONS)).toHaveLength(61);
 });
 
@@ -190,7 +190,7 @@ describe("model calls", () => {
     expect(sent.system).toContain("Focus on the Access Control control family.");
     expect(sent.system).toContain("such as multi-factor authentication");
     expect(sent.system).toContain("SOC 2 Type I examination");
-    expect(sent.system).toContain("CC6.1: The entity implements logical access security software");
+    expect(sent.system).toContain("CC6.1: Uses logical access security software");
     expect(sent.messages).toEqual([{ role: "user", content: "Assess this security control:\n\n" + INPUT }]);
     expect(fetchMock.mock.calls[0][1].headers["x-api-key"]).toBe("test-key");
   });

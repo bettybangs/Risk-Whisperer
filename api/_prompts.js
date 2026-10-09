@@ -76,71 +76,72 @@ export const FRAMEWORK_REFERENCES = {
   "SOC 2 Type II": SOC2_TSC_REFERENCE + SOC2_TYPE_II_GUIDANCE,
 };
 
-// Official AICPA 2017 Trust Services Criteria text (TSP Section 100) for all
-// 61 criteria, plus a few "Do NOT" notes that keep the models from stretching
-// a criterion past what it covers. Used by the assessment and the judge.
+// Verified summaries of all 61 AICPA 2017 Trust Services Criteria, checked
+// against the AICPA 2017 Trust Services Criteria (not the official text), plus
+// a few "Do NOT" notes that keep the models from stretching a criterion past
+// what it covers. Used by the assessment and the judge.
 export const SOC2_GROUNDED_DEFINITIONS = {
-  "CC1.1": "The entity demonstrates a commitment to integrity and ethical values.",
-  "CC1.2": "The board of directors demonstrates independence from management and exercises oversight of the development and performance of internal control. This is specifically about board composition, independence, and oversight activity, not general management accountability or policy communication (that's CC1.1/CC1.3/CC2.2).",
-  "CC1.3": "Management establishes, with board oversight, structures, reporting lines, and appropriate authorities and responsibilities in the pursuit of objectives.",
-  "CC1.4": "The entity demonstrates a commitment to attract, develop, and retain competent individuals in alignment with objectives.",
-  "CC1.5": "The entity holds individuals accountable for their internal control responsibilities in the pursuit of objectives.",
-  "CC2.1": "The entity obtains or generates and uses relevant, quality information to support the functioning of internal control.",
-  "CC2.2": "The entity internally communicates information, including objectives and responsibilities for internal control, necessary to support the functioning of internal control.",
-  "CC2.3": "The entity communicates with external parties regarding matters affecting the functioning of internal control.",
-  "CC3.1": "The entity specifies objectives with sufficient clarity to enable the identification and assessment of risks relating to objectives.",
-  "CC3.2": "The entity identifies risks to the achievement of its objectives across the entity and analyzes risks as a basis for determining how the risks should be managed.",
-  "CC3.3": "The entity considers the potential for fraud in assessing risks to the achievement of objectives.",
-  "CC3.4": "The entity identifies and assesses changes that could significantly impact the system of internal control.",
-  "CC4.1": "The entity selects, develops, and performs ongoing and/or separate evaluations to ascertain whether the components of internal control are present and functioning.",
-  "CC4.2": "The entity evaluates and communicates internal control deficiencies in a timely manner to those parties responsible for taking corrective action, including senior management and the board of directors, as appropriate.",
-  "CC5.1": "The entity selects and develops control activities that contribute to the mitigation of risks to the achievement of objectives to acceptable levels.",
-  "CC5.2": "The entity also selects and develops general control activities over technology to support the achievement of objectives.",
-  "CC5.3": "The entity deploys control activities through policies that establish what is expected and in procedures that put policies into action.",
-  "CC6.1": "The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events to meet the entity's objectives. Its points of focus include identifying and authenticating users, managing identification and authentication requirements (such as multi-factor authentication), managing credentials for infrastructure and software, restricting logical access, network segmentation, and encrypting data, so MFA enforcement and credential policies map here. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
-  "CC6.2": "Prior to issuing system credentials and granting system access, the entity registers and authorizes new internal and external users whose access is administered by the entity. For those users whose access is administered by the entity, user system credentials are removed when user access is no longer authorized. This is specifically the process of registering, authorizing, and deprovisioning users; MFA enforcement or the absence of a credential type is not evidence of that process (that is CC6.1).",
-  "CC6.3": "The entity authorizes, modifies, or removes access to data, software, functions, and other protected information assets based on roles, responsibilities, or the system design and changes, giving consideration to the concepts of least privilege and segregation of duties, to meet the entity's objectives.",
-  "CC6.4": "The entity restricts physical access to facilities and protected information assets (for example, data center facilities, backup media storage, and other sensitive locations) to authorized personnel to meet the entity's objectives.",
-  "CC6.5": "The entity discontinues logical and physical protections over physical assets only after the ability to read or recover data and software from those assets has been diminished and is no longer required to meet the entity's objectives.",
-  "CC6.6": "The entity implements logical access security measures to protect against threats from sources outside its system boundaries.",
-  "CC6.7": "The entity restricts the transmission, movement, and removal of information to authorized internal and external users and processes, and protects it during transmission, movement, or removal to meet the entity's objectives.",
-  "CC6.8": "The entity implements controls to prevent or detect and act upon the introduction of unauthorized or malicious software to meet the entity's objectives. Do NOT map CC6.8 for generic system patches or OS updates unless explicit anti-malware measures (like AV or EDR) are mentioned.",
-  "CC7.1": "To meet its objectives, the entity uses detection and monitoring procedures to identify (1) changes to configurations that result in the introduction of new vulnerabilities, and (2) susceptibilities to newly discovered vulnerabilities. This is specifically vulnerability and configuration-change detection, not general security incident detection (that's CC7.2/CC7.3).",
-  "CC7.2": "The entity monitors system components and the operation of those components for anomalies that are indicative of malicious acts, natural disasters, and errors affecting the entity's ability to meet its objectives; anomalies are analyzed to determine whether they represent security events.",
-  "CC7.3": "The entity evaluates security events to determine whether they could or have resulted in a failure of the entity to meet its objectives (security incidents) and, if so, takes actions to prevent or address such failures. Executing a defined incident response program is CC7.4, not CC7.3.",
-  "CC7.4": "The entity responds to identified security incidents by executing a defined incident-response program to understand, contain, remediate, and communicate security incidents, as appropriate.",
-  "CC7.5": "The entity identifies, develops, and implements activities to recover from identified security incidents.",
-  "CC8.1": "The entity authorizes, designs, develops or acquires, configures, documents, tests, approves, and implements changes to infrastructure, data, software, and procedures to meet its objectives.",
-  "CC9.1": "The entity identifies, selects, and develops risk mitigation activities for risks arising from potential business disruptions.",
-  "CC9.2": "The entity assesses and manages risks associated with vendors and business partners.",
-  "A1.1": "The entity maintains, monitors, and evaluates current processing capacity and use of system components (infrastructure, data, and software) to manage capacity demand and to enable the implementation of additional capacity to help meet its objectives.",
-  "A1.2": "The entity authorizes, designs, develops or acquires, implements, operates, approves, maintains, and monitors environmental protections, software, data backup processes, and recovery infrastructure to meet its objectives.",
-  "A1.3": "The entity tests recovery plan procedures supporting system recovery to meet its objectives.",
-  "C1.1": "The entity identifies and maintains confidential information to meet the entity\u2019s objectives related to confidentiality. Do NOT map C1.1 for routine data destruction, wiping, or disposal procedures unless asset identification/classification inventories are explicitly described.",
-  "C1.2": "The entity disposes of confidential information to meet the entity\u2019s objectives related to confidentiality. This is specifically about the disposal/destruction of confidential information: the physical or logical process of removing it so it can no longer be accessed. Do NOT frame this control around who is authorized to access confidential information, access permissions, or authorization requirements, which is a different control (access control / authorization), not C1.2. C1.2 is strictly about the act of destroying/disposing of data once it's no longer needed.",
-  "PI1.1": "The entity obtains or generates, uses, and communicates relevant, quality information regarding the objectives related to processing, including definitions of data processed and product and service specifications, to support the use of products and services.",
-  "PI1.2": "The entity implements policies and procedures over system inputs, including controls over completeness and accuracy, to result in products, services, and reporting to meet the entity's objectives.",
-  "PI1.3": "The entity implements policies and procedures over system processing to result in products, services, and reporting to meet the entity's objectives.",
-  "PI1.4": "The entity implements policies and procedures to make available or deliver output completely, accurately, and timely in accordance with specifications to meet the entity's objectives.",
-  "PI1.5": "The entity implements policies and procedures to store inputs, items in processing, and outputs completely, accurately, and timely in accordance with system specifications to meet the entity's objectives.",
-  "P1.1": "The entity provides notice to data subjects about its privacy practices to meet the entity's objectives related to privacy. The notice is updated and communicated to data subjects in a timely manner for changes to the entity's privacy practices, including changes in the use of personal information, to meet the entity's objectives related to privacy.",
-  "P2.1": "The entity communicates choices available regarding the collection, use, retention, disclosure, and disposal of personal information to the data subjects and the consequences, if any, of each choice. Explicit consent for the collection, use, retention, disclosure, and disposal of personal information is obtained from data subjects or other authorized persons, if required. Such consent is obtained only for the intended purpose of the information to meet the entity's objectives related to privacy. The entity's basis for determining implicit consent for the collection, use, retention, disclosure, and disposal of personal information is documented.",
-  "P3.1": "Personal information is collected consistent with the entity's objectives related to privacy.",
-  "P3.2": "For information requiring explicit consent, the entity communicates the need for such consent as well as the consequences of a failure to provide consent for the request for personal information and obtains the consent prior to the collection of the information to meet the entity's objectives related to privacy.",
-  "P4.1": "The entity limits the use of personal information to the purposes identified in the entity's objectives related to privacy.",
-  "P4.2": "The entity retains personal information consistent with the entity's objectives related to privacy.",
-  "P4.3": "The entity securely disposes of personal information to meet the entity's objectives related to privacy.",
-  "P5.1": "The entity grants identified and authenticated data subjects the ability to access their stored personal information for review and, upon request, provides physical or electronic copies of that information to data subjects to meet the entity's objectives related to privacy. If access is denied, data subjects are informed of the denial and reason for such denial, as required, to meet the entity's objectives related to privacy.",
-  "P5.2": "The entity corrects, amends, or appends personal information based on information provided by data subjects and communicates such information to third parties, as committed or required, to meet the entity's objectives related to privacy. If a request for correction is denied, data subjects are informed of the denial and reason for such denial to meet the entity's objectives related to privacy.",
-  "P6.1": "The entity discloses personal information to third parties with the explicit consent of data subjects and such consent is obtained prior to disclosure to meet the entity's objectives related to privacy.",
-  "P6.2": "The entity creates and retains a complete, accurate, and timely record of authorized disclosures of personal information to meet the entity's objectives related to privacy.",
-  "P6.3": "The entity creates and retains a complete, accurate, and timely record of detected or reported unauthorized disclosures (including breaches) of personal information to meet the entity's objectives related to privacy.",
-  "P6.4": "The entity obtains privacy commitments from vendors and other third parties who have access to personal information to meet the entity's objectives related to privacy. The entity assesses those parties' compliance on a periodic and as-needed basis and takes corrective action, if necessary.",
-  "P6.5": "The entity obtains commitments from vendors and other third parties with access to personal information to notify the entity in the event of actual or suspected unauthorized disclosures of personal information. Such notifications are reported to appropriate personnel and acted on in accordance with established incident-response procedures to meet the entity's objectives related to privacy.",
-  "P6.6": "The entity provides notification of breaches and incidents to affected data subjects, regulators, and others to meet the entity's objectives related to privacy.",
-  "P6.7": "The entity provides data subjects with an accounting of the personal information held and disclosure of the data subjects' personal information, upon the data subjects' request, to meet the entity's objectives related to privacy.",
-  "P7.1": "The entity collects and maintains accurate, up-to-date, complete, and relevant personal information to meet the entity's objectives related to privacy.",
-  "P8.1": "The entity implements a process for receiving, addressing, resolving, and communicating the resolution of inquiries, complaints, and disputes from data subjects and others and periodically monitors compliance to meet the entity's objectives related to privacy. Corrections and other necessary actions related to identified deficiencies are made or taken in a timely manner."
+  "CC1.1": "Shows a commitment to integrity and ethical values.",
+  "CC1.2": "The board is independent from management and oversees internal control. This is specifically about board composition, independence, and oversight activity, not general management accountability or policy communication (that's CC1.1/CC1.3/CC2.2).",
+  "CC1.3": "Management sets structures, reporting lines, authorities, and responsibilities, with board oversight.",
+  "CC1.4": "Attracts, develops, and retains competent people.",
+  "CC1.5": "Holds people accountable for their internal control responsibilities.",
+  "CC2.1": "Obtains or generates and uses relevant, quality information to support internal control.",
+  "CC2.2": "Communicates internal control information, objectives, and responsibilities internally.",
+  "CC2.3": "Communicates with external parties about matters affecting internal control.",
+  "CC3.1": "Sets objectives clearly enough to identify and assess the risks to them.",
+  "CC3.2": "Identifies and analyzes risks across the entity to decide how to manage them.",
+  "CC3.3": "Considers the potential for fraud when assessing risks.",
+  "CC3.4": "Identifies and assesses changes that could significantly affect internal control.",
+  "CC4.1": "Performs ongoing and/or separate evaluations to confirm controls are present and working.",
+  "CC4.2": "Evaluates control deficiencies and reports them promptly to those responsible for fixing them, including senior management and the board.",
+  "CC5.1": "Selects and develops control activities that reduce risks to acceptable levels.",
+  "CC5.2": "Selects and develops general control activities over technology.",
+  "CC5.3": "Puts control activities in place through policies (what is expected) and procedures (how it is done).",
+  "CC6.1": "Uses logical access security software, infrastructure, and architecture to protect information assets. Includes identifying and authenticating users (such as MFA) and managing credentials. Its points of focus include identifying and authenticating users, managing identification and authentication requirements (such as multi-factor authentication), managing credentials for infrastructure and software, restricting logical access, network segmentation, and encrypting data, so MFA enforcement and credential policies map here. Do NOT map CC6.1 for internal endpoint management, internal patch management, internal software updates, or general vulnerability scanning.",
+  "CC6.2": "Registers and authorizes new internal and external users before issuing credentials, and removes credentials when access is no longer authorized. MFA is not evidence of this process. This is specifically the process of registering, authorizing, and deprovisioning users; MFA enforcement or the absence of a credential type is not evidence of that process (that is CC6.1).",
+  "CC6.3": "Grants, changes, and removes access based on roles and responsibilities, applying least privilege and segregation of duties.",
+  "CC6.4": "Restricts physical access to facilities and protected assets, such as data centers and backup media storage, to authorized personnel.",
+  "CC6.5": "Removes protections from physical assets only after the data and software on them can no longer be read or recovered.",
+  "CC6.6": "Protects against threats from outside the system boundaries with logical access security measures.",
+  "CC6.7": "Restricts and protects the transmission, movement, and removal of information to authorized users and processes.",
+  "CC6.8": "Prevents or detects, and acts on, unauthorized or malicious software. Do NOT map CC6.8 for generic system patches or OS updates unless explicit anti-malware measures (like AV or EDR) are mentioned.",
+  "CC7.1": "Uses detection and monitoring to find configuration changes that introduce vulnerabilities, and exposure to newly discovered vulnerabilities. This is specifically vulnerability and configuration-change detection, not general security incident detection (that's CC7.2/CC7.3).",
+  "CC7.2": "Monitors system components for anomalies that signal malicious acts, natural disasters, or errors, and analyzes them to decide whether they are security events.",
+  "CC7.3": "Evaluates security events to decide whether they are, or could become, security incidents, and acts to prevent or address them. Executing a defined incident response program is CC7.4, not CC7.3.",
+  "CC7.4": "Responds to security incidents through a defined incident response program: understand, contain, remediate, and communicate.",
+  "CC7.5": "Identifies, develops, and carries out activities to recover from security incidents.",
+  "CC8.1": "Authorizes, designs, develops or acquires, configures, documents, tests, approves, and implements changes to infrastructure, data, software, and procedures.",
+  "CC9.1": "Identifies, selects, and develops risk mitigation activities for potential business disruptions.",
+  "CC9.2": "Assesses and manages risks from vendors and business partners.",
+  "A1.1": "Monitors and evaluates processing capacity and usage to manage demand and add capacity when needed.",
+  "A1.2": "Authorizes, implements, operates, maintains, and monitors environmental protections, software, data backup processes, and recovery infrastructure.",
+  "A1.3": "Tests recovery plan procedures that support system recovery.",
+  "C1.1": "Identifies and maintains confidential information. Do NOT map C1.1 for routine data destruction, wiping, or disposal procedures unless asset identification/classification inventories are explicitly described.",
+  "C1.2": "Disposes of confidential information. This is specifically about the disposal/destruction of confidential information: the physical or logical process of removing it so it can no longer be accessed. Do NOT frame this control around who is authorized to access confidential information, access permissions, or authorization requirements, which is a different control (access control / authorization), not C1.2. C1.2 is strictly about the act of destroying/disposing of data once it's no longer needed.",
+  "PI1.1": "Obtains, uses, and communicates relevant, quality information about processing objectives, including data definitions and product or service specifications.",
+  "PI1.2": "Applies policies and procedures over system inputs, including completeness and accuracy controls.",
+  "PI1.3": "Applies policies and procedures over system processing so results meet objectives.",
+  "PI1.4": "Delivers or makes output available completely, accurately, and on time according to specifications.",
+  "PI1.5": "Stores inputs, in-process items, and outputs completely, accurately, and on time according to system specifications.",
+  "P1.1": "Gives data subjects notice of its privacy practices and updates them promptly when practices change.",
+  "P2.1": "Communicates choices about the collection, use, retention, disclosure, and disposal of personal information and the consequences of each choice. Gets explicit consent when required, only for the intended purpose, and documents its basis for implicit consent.",
+  "P3.1": "Collects personal information consistent with its privacy objectives.",
+  "P3.2": "For information that needs explicit consent, explains why consent is needed and the consequences of refusing, and gets consent before collecting.",
+  "P4.1": "Limits the use of personal information to the purposes in its privacy objectives.",
+  "P4.2": "Retains personal information consistent with its privacy objectives.",
+  "P4.3": "Securely disposes of personal information.",
+  "P5.1": "Lets identified and authenticated data subjects access their personal information for review, provides copies on request, and explains any denial.",
+  "P5.2": "Corrects, amends, or appends personal information based on data subjects' input, passes changes to third parties as committed or required, and explains any denial.",
+  "P6.1": "Discloses personal information to third parties only with the data subject's explicit consent, obtained before disclosure.",
+  "P6.2": "Keeps a complete, accurate, and timely record of authorized disclosures.",
+  "P6.3": "Keeps a complete, accurate, and timely record of detected or reported unauthorized disclosures, including breaches.",
+  "P6.4": "Obtains privacy commitments from vendors and third parties with access to personal information, and periodically checks their compliance.",
+  "P6.5": "Obtains commitments from vendors and third parties to notify the entity of actual or suspected unauthorized disclosures, and acts on those notices.",
+  "P6.6": "Notifies affected data subjects, regulators, and others of breaches and incidents.",
+  "P6.7": "Gives data subjects, on request, an accounting of the personal information held about them and how it was disclosed.",
+  "P7.1": "Collects and maintains accurate, up-to-date, complete, and relevant personal information.",
+  "P8.1": "Has a process to receive, address, resolve, and report back on privacy inquiries, complaints, and disputes, and periodically monitors compliance and fixes deficiencies promptly."
 };
 
 // Added to every system prompt. The server also replaces any em-dash that
@@ -151,10 +152,10 @@ export const NO_EM_DASH_RULE = " Never use em-dashes (the long dash, Unicode U+2
 
 export function buildAssessRequest({ framework, env, family, input }) {
   var familyHint = family !== "Any (Auto-detect)" ? " Focus on the " + family + " control family." : "";
-  // Give the model the official text of every SOC 2 criterion so it picks
+  // Give the model a verified summary of every SOC 2 criterion so it picks
   // IDs by what each criterion covers instead of guessing from the number.
   var soc2CriteriaHint = framework.startsWith("SOC 2")
-    ? " Official 2017 Trust Services Criteria text for every SOC 2 criterion. Choose controlMappings IDs only from this list, by matching what the input describes against what each criterion actually covers:\n" +
+    ? " Verified summaries of the AICPA 2017 Trust Services Criteria for every SOC 2 criterion. Choose controlMappings IDs only from this list, by matching what the input describes against what each criterion actually covers:\n" +
       Object.keys(SOC2_GROUNDED_DEFINITIONS).map(function(id) { return id + ": " + SOC2_GROUNDED_DEFINITIONS[id]; }).join("\n") + "\n"
     : "";
   return {
@@ -187,7 +188,7 @@ export function buildJudgeRequest({ input, controls }) {
   }).join("\n");
   return {
     ...MODELS.judge,
-    system: "You are a precise GRC writer. For each control below, you are given its VERIFIED, AUTHORITATIVE definition from the real AICPA source (or, where none is available, a note saying so), plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point: treat it as a hard constraint, not a style preference. Also judge whether each control is a good fit. Judge by the substance of the definition, not its exact wording: an activity that clearly falls within the definition's scope counts even if the definition does not name it. Set relevant to false only if the situation does not describe anything the definition governs, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process; otherwise set relevant to true. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean." + NO_EM_DASH_RULE + "\n\nControl definitions:\n" + defsText,
+    system: "You are a precise GRC writer. For each control below, you are given its definition from verified summaries of the AICPA 2017 Trust Services Criteria (or, where none is available, a note saying so), plus the situation being assessed. Write a 1-2 sentence rationale for each control using ONLY what its definition actually covers. If the definition includes a 'Do NOT' instruction, you must not include that excluded concept anywhere in your rationale, even in passing or as a secondary point: treat it as a hard constraint, not a style preference. Also judge whether each control is a good fit. Judge by the substance of the definition, not its exact wording: an activity that clearly falls within the definition's scope counts even if the definition does not name it. Set relevant to false only if the situation does not describe anything the definition governs, if the control is merely associated with the topic, or if it would only apply because of a missing or undocumented process; otherwise set relevant to true. When relevant is false, the rationale must be one sentence explaining what the definition covers that the situation does not describe. Return ONLY valid JSON (no markdown, no backticks): an array of objects with keys {id, relevant, rationale}, where relevant is a boolean." + NO_EM_DASH_RULE + "\n\nControl definitions:\n" + defsText,
     messages: [{ role: "user", content: "Situation being assessed:\n\n" + input }]
   };
 }
