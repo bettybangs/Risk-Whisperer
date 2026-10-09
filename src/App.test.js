@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import App from './App';
+import App, { SOC2_CONTROLS } from './App';
+import { SOC2_GROUNDED_DEFINITIONS } from '../api/_prompts';
 
 afterEach(() => {
   delete global.fetch;
@@ -60,4 +61,10 @@ test('sends only data to the server and shows weak-fit flags and verified labels
   const copied = writeText.mock.calls[0][0];
   expect(copied).toContain('CC9.9 - Made up: Original rationale 2. (Weak fit: Not described., judged without a verified definition)');
   expect(copied).not.toContain('\u2014');
+});
+
+test('every SOC 2 criterion with a definition has a display name', () => {
+  const missing = Object.keys(SOC2_GROUNDED_DEFINITIONS).filter((id) => !SOC2_CONTROLS[id]);
+  expect(missing).toEqual([]);
+  expect(Object.keys(SOC2_GROUNDED_DEFINITIONS)).toHaveLength(61);
 });
