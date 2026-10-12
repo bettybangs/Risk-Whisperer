@@ -68,3 +68,23 @@ test('every SOC 2 criterion with a definition has a display name', () => {
   expect(missing).toEqual([]);
   expect(Object.keys(SOC2_GROUNDED_DEFINITIONS)).toHaveLength(61);
 });
+
+test('SOC 2 control IDs are paired with the right category name', () => {
+  const prefixToCategory = [
+    [/^CC3\./, 'Risk Assessment'],
+    [/^CC6\./, 'Logical & Physical Access'],
+    [/^A1\./, 'Availability'],
+    [/^C1\./, 'Confidentiality'],
+    [/^PI1\./, 'Processing Integrity'],
+    [/^P\d/, 'Privacy']
+  ];
+  const wrong = [];
+  Object.keys(SOC2_CONTROLS).forEach((id) => {
+    prefixToCategory.forEach(([pattern, category]) => {
+      if (pattern.test(id) && !SOC2_CONTROLS[id].startsWith(category + ':')) wrong.push(id);
+    });
+  });
+  expect(wrong).toEqual([]);
+  // The reported bug: A1.2 was labeled "Risk Assessment".
+  expect(SOC2_CONTROLS['A1.2']).toMatch(/^Availability:/);
+});
