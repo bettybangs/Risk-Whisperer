@@ -133,5 +133,6 @@ test("verify separates meaning issues from added context", async () => {
 test("translator prompt forbids narrowing scope and unstated claims", () => {
   const s = buildTranslateRequest(GOOD).system;
   assert.match(s, /never narrow or widen scope/);
-  assert.match(s, /newest, latest, or current/);
+  assert.match(s, /Hard rules: never write the words/);
+  assert.match(s, /at most 3 gaps/);
 });
