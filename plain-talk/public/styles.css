@@ -1,0 +1,29 @@
+:root { --bg:#fafaf8; --fg:#1d1d1b; --muted:#6b6b66; --line:#d9d9d3; --card:#fff; --accent:#1f5f8b; --warn:#9a5b00; --bad:#a32020; --ok:#1d6b3a; }
+@media (prefers-color-scheme: dark) { :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#33332f; --card:#1f1f1d; --accent:#6fb3e0; --warn:#e0a84a; --bad:#ee7b7b; --ok:#6fcf8f; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
+main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { margin:0; font-size: 1.8rem; } h2 { font-size: 1rem; margin: 20px 0 8px; }
+.tag, .muted { color: var(--muted); } .tag { margin: 4px 0 20px; }
+.controls { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+label { display:flex; flex-direction:column; gap:4px; font-size:.85rem; color:var(--muted); }
+label.block { margin-bottom:8px; }
+select, textarea { font:inherit; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+textarea { width:100%; resize:vertical; }
+.row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:10px 0; }
+button { font:inherit; font-weight:600; padding:9px 18px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+button.secondary { background:none; color:var(--accent); }
+button:disabled { opacity:.55; cursor:default; }
+.error { color:var(--bad); font-weight:600; }
+.cols { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+@media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+.panel, .summary { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+.summary h2 { margin-top:0; } .summary p { margin:0; }
+.panel p { margin: 0 0 .8em; } .panel p:last-child { margin-bottom:0; }
+#flags li { color: var(--warn); }
+dt { font-weight:700; } dd { margin: 0 0 8px; }
+.verdict { padding:10px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); }
+.verdict.ok { border-color:var(--ok); } .verdict.bad { border-color:var(--bad); }
+.issue { margin:10px 0 0; padding-left:12px; border-left:3px solid var(--bad); }
+.issue q { display:block; color:var(--muted); font-size:.9rem; }
+footer { margin-top:32px; font-size:.85rem; }

@@ -1,0 +1,12 @@
+{
+  "name": "plain-talk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Translate technical descriptions into plain language, with a verification pass.",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" }
+}

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plain Talk</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>Plain Talk</h1>
+    <p class="tag">Paste technical text. Get it in plain language, checked against the original.</p>
+  </header>
+
+  <section class="controls" aria-label="Options">
+    <label>Direction
+      <select id="mode">
+        <option value="tech-to-plain">Tech Talk to Plain Talk</option>
+        <option value="plain-to-tech">Plain Talk to Tech Talk</option>
+      </select>
+    </label>
+    <label>Audience
+      <select id="audience">
+        <option>General public</option>
+        <option>Business executive</option>
+        <option>Customer</option>
+        <option>New employee</option>
+      </select>
+    </label>
+    <label>Length
+      <select id="length">
+        <option>Full translation</option>
+        <option>Summary only</option>
+      </select>
+    </label>
+  </section>
+
+  <label class="block">Your text
+    <textarea id="text" rows="10" maxlength="20000" placeholder="Paste a technical description here..."></textarea>
+  </label>
+  <div class="row">
+    <button id="go" type="button">Translate</button>
+    <span id="count" class="muted">0 / 20,000</span>
+  </div>
+  <p id="error" class="error" role="alert" hidden></p>
+
+  <section id="results" hidden>
+    <div class="summary"><h2>In short</h2><p id="summary"></p></div>
+    <div class="cols" id="cols">
+      <div><h2>Original</h2><div id="original" class="panel"></div></div>
+      <div><h2>Translation</h2><div id="plain" class="panel"></div></div>
+    </div>
+    <div id="flagsBox" hidden><h2>Needs a human look</h2><ul id="flags"></ul></div>
+    <div id="glossaryBox" hidden><h2>Terms explained</h2><dl id="glossary"></dl></div>
+    <div class="row">
+      <button id="verify" type="button" class="secondary">Check for dropped or changed meaning</button>
+      <button id="copy" type="button" class="secondary">Copy translation</button>
+    </div>
+    <div id="verifyOut" hidden></div>
+  </section>
+
+  <footer class="muted">Text is sent to an AI service for translation and is not stored by this app. Review translations before relying on them, especially for safety, legal, or medical content.</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
