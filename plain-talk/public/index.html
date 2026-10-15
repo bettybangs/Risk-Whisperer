@@ -20,6 +20,16 @@
         <option value="plain-to-tech">Plain Talk to Tech Talk</option>
       </select>
     </label>
+    <label>Industry
+      <select id="industry">
+        <option>General</option>
+        <option selected>Security findings</option>
+        <option>Legal &amp; contracts</option>
+        <option>Software release notes</option>
+        <option>Insurance &amp; finance</option>
+        <option>Healthcare education</option>
+      </select>
+    </label>
     <label>Audience
       <select id="audience">
         <option>General public</option>
@@ -35,6 +45,8 @@
       </select>
     </label>
   </section>
+
+  <p id="industryNote" class="note" hidden>Healthcare mode is for patient-education and policy text only. Do not paste patient information, and have a clinician review the result before it is used.</p>
 
   <label class="block">Your text
     <textarea id="text" rows="10" maxlength="20000" placeholder="Paste a technical description here..."></textarea>

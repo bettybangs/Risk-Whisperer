@@ -3,14 +3,15 @@ import assert from "node:assert/strict";
 import translate from "../api/translate.js";
 import verify from "../api/verify.js";
 import { isAllowedOrigin } from "../api/_security.js";
-import { buildTranslateRequest } from "../api/_prompts.js";
+import { buildTranslateRequest, buildVerifyRequest, INDUSTRIES } from "../api/_prompts.js";
+import { readFileSync } from "node:fs";
 import { parseModelJson } from "../api/_claude.js";
 
 const ORIGIN = "http://localhost:3000";
 process.env.NODE_ENV = "development";
 process.env.ANTHROPIC_API_KEY = "test-key";
 
-const GOOD = { text: "The service uses TLS 1.3.", audience: "General public", mode: "tech-to-plain", length: "Full translation" };
+const GOOD = { text: "The service uses TLS 1.3.", audience: "General public", mode: "tech-to-plain", length: "Full translation", industry: "Security findings" };
 
 function req(body, over = {}) {
   return { method: "POST", headers: { origin: ORIGIN, "content-type": "application/json", ...(over.headers || {}) }, body, ...(over.req || {}) };
@@ -88,4 +89,27 @@ test("origin allowlist honours ALLOWED_ORIGINS and own vercel hosts", () => {
 
 test("parseModelJson tolerates surrounding prose", () => {
   assert.deepEqual(parseModelJson('Here you go: {"a":1} done'), { a: 1 });
+});
+
+test("industry is required on translate, optional on verify, and must be a known one", async () => {
+  const { industry, ...noIndustry } = GOOD;
+  let r = res(); await translate(req(noIndustry), r); assert.equal(r.statusCode, 400);
+  r = res(); await translate(req({ ...GOOD, industry: "Pirates" }), r); assert.equal(r.statusCode, 400);
+  mockClaude(JSON.stringify({ faithful: true, issues: [] }));
+  r = res(); await verify(req({ original: "a", translation: "b" }), r); assert.equal(r.statusCode, 200);
+  r = res(); await verify(req({ original: "a", translation: "b", industry: "Pirates" }), r); assert.equal(r.statusCode, 400);
+});
+
+test("industry rules reach the translate and verify prompts", () => {
+  assert.match(buildTranslateRequest(GOOD).system, /security finding/);
+  assert.match(buildTranslateRequest(GOOD).system, /severity or risk rating/);
+  assert.doesNotMatch(buildTranslateRequest({ ...GOOD, industry: "General" }).system, /Industry rules/);
+  assert.match(buildVerifyRequest({ original: "a", translation: "b", industry: "Legal & contracts" }).system, /obligations and permissions/);
+});
+
+test("the industry dropdown in index.html matches the server list", () => {
+  const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
+  const block = html.match(/<select id="industry">([\s\S]*?)<\/select>/)[1];
+  const options = [...block.matchAll(/<option[^>]*>([^<]+)<\/option>/g)].map((m) => m[1].replace(/&amp;/g, "&"));
+  assert.deepEqual(options, INDUSTRIES);
 });

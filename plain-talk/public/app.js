@@ -26,6 +26,10 @@
     $("count").textContent = $("text").value.length.toLocaleString("en-US") + " / 20,000";
   });
 
+  $("industry").addEventListener("change", function () {
+    show($("industryNote"), $("industry").value === "Healthcare education");
+  });
+
   $("go").addEventListener("click", async function () {
     var text = $("text").value;
     if (!text.trim()) { setError("Paste some text first."); return; }
@@ -34,7 +38,7 @@
     show($("verifyOut"), false);
     try {
       var d = await post("/api/translate", {
-        text: text, audience: $("audience").value, mode: $("mode").value, length: $("length").value
+        text: text, audience: $("audience").value, mode: $("mode").value, length: $("length").value, industry: $("industry").value
       });
       var summaryOnly = $("length").value === "Summary only";
       $("summary").textContent = d.summary;
@@ -53,7 +57,7 @@
         $("glossary").appendChild(dt); $("glossary").appendChild(dd);
       });
       show($("glossaryBox"), d.glossary.length > 0);
-      last = { original: text, translation: d.plain };
+      last = { original: text, translation: d.plain, industry: $("industry").value };
       show($("results"), true);
     } catch (e) {
       setError(e.message);

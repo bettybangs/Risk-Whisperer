@@ -13,7 +13,7 @@
 //    material to translate, and the output is only displayed, never executed.
 // 6. Clear JSON errors and a time limit (see _claude.js).
 
-import { AUDIENCES, LENGTHS, MODES, MAX_INPUT_CHARS } from "./_prompts.js";
+import { AUDIENCES, INDUSTRIES, LENGTHS, MODES, MAX_INPUT_CHARS } from "./_prompts.js";
 
 export class HttpError extends Error {
   constructor(status, message) {
@@ -63,8 +63,9 @@ function requireOneOf(value, name, allowed) {
 }
 
 export function validateTranslateBody(body) {
-  checkKeys(body, ["text", "audience", "mode", "length"]);
+  checkKeys(body, ["text", "audience", "mode", "length", "industry"]);
   return {
+    industry: requireOneOf(body.industry, "industry", INDUSTRIES),
     text: requireString(body.text, "Text", MAX_INPUT_CHARS),
     audience: requireOneOf(body.audience, "audience", AUDIENCES),
     mode: requireOneOf(body.mode, "mode", MODES),
@@ -73,8 +74,9 @@ export function validateTranslateBody(body) {
 }
 
 export function validateVerifyBody(body) {
-  checkKeys(body, ["original", "translation"]);
+  checkKeys(body, ["original", "translation", "industry"]);
   return {
+    industry: requireOneOf(body.industry === undefined ? "General" : body.industry, "industry", INDUSTRIES),
     original: requireString(body.original, "Original", MAX_INPUT_CHARS),
     translation: requireString(body.translation, "Translation", MAX_INPUT_CHARS * 2)
   };

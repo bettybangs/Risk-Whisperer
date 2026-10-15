@@ -16,13 +16,17 @@ npm test
 
 | Path | Purpose |
 |---|---|
-| `api/translate.js` | `POST {text, audience, mode, length}` returns `{summary, plain, glossary, flags}` |
-| `api/verify.js` | `POST {original, translation}` returns `{faithful, issues}`; opt-in, uses a stronger model |
+| `api/translate.js` | `POST {text, audience, mode, length, industry}` returns `{summary, plain, glossary, flags}` |
+| `api/verify.js` | `POST {original, translation, industry?}` returns `{faithful, issues}`; opt-in, uses a stronger model |
 | `api/_prompts.js` | All prompts, option lists, and model choices (server side only) |
 | `api/_security.js` | Method, origin, content-type, and field checks |
 | `api/_claude.js` | Anthropic call, timeout, error mapping, JSON parsing |
 | `public/` | The UI (text set with `textContent` only, so model output cannot inject markup) |
 | `dev-server.js` | Local server that mounts `api/` without a Vercel login |
+
+## Industry modes
+
+General, Security findings, Legal & contracts, Software release notes, Insurance & finance, and Healthcare education. Each is one entry in `INDUSTRY_GUIDE` in `api/_prompts.js` (translation rules plus a list of what the verifier must not let slip) and one `<option>` in `public/index.html`; a test fails if the two drift apart. Healthcare mode is for education and policy text only, not patient data.
 
 ## Differences from Risk Whisperer's Plain Talk
 
