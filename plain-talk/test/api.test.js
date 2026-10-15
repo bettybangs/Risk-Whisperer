@@ -64,7 +64,7 @@ test("document text is wrapped as data and the model comes from the server", () 
   assert.ok(q.model);
 });
 
-test("verify never reports faithful when issues exist", async () => {
+test("verify never reports faithful when a meaning issue exists", async () => {
   mockClaude(JSON.stringify({ faithful: true, issues: [{ type: "dropped", original: "o", translation: "t", detail: "d" }] }));
   const r = res(); await verify(req({ original: "a", translation: "b" }), r);
   assert.equal(r.body.faithful, false);
@@ -112,4 +112,26 @@ test("the industry dropdown in index.html matches the server list", () => {
   const block = html.match(/<select id="industry">([\s\S]*?)<\/select>/)[1];
   const options = [...block.matchAll(/<option[^>]*>([^<]+)<\/option>/g)].map((m) => m[1].replace(/&amp;/g, "&"));
   assert.deepEqual(options, INDUSTRIES);
+});
+
+test("verify separates meaning issues from added context", async () => {
+  mockClaude(JSON.stringify({ faithful: true, issues: [
+    { type: "added", impact: "context", original: "o1", translation: "t1", detail: "d1" },
+    { type: "changed", impact: "meaning", original: "o2", translation: "t2", detail: "d2" },
+    { type: "added", original: "o3", translation: "t3", detail: "d3" }
+  ] }));
+  let r = res(); await verify(req({ original: "a", translation: "b" }), r);
+  assert.equal(r.body.faithful, false);
+  assert.deepEqual(r.body.issues.map((i) => i.impact), ["meaning", "meaning", "context"]);
+  // Only context issues: still faithful.
+  mockClaude(JSON.stringify({ faithful: true, issues: [{ type: "added", impact: "context", original: "o", translation: "t", detail: "d" }] }));
+  r = res(); await verify(req({ original: "a", translation: "b" }), r);
+  assert.equal(r.body.faithful, true);
+  assert.equal(r.body.issues.length, 1);
+});
+
+test("translator prompt forbids narrowing scope and unstated claims", () => {
+  const s = buildTranslateRequest(GOOD).system;
+  assert.match(s, /never narrow or widen scope/);
+  assert.match(s, /newest, latest, or current/);
 });

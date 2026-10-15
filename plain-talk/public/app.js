@@ -76,10 +76,15 @@
       box.textContent = "";
       var v = document.createElement("div");
       v.className = "verdict " + (d.faithful ? "ok" : "bad");
-      v.textContent = d.faithful ? "No dropped or changed meaning found." : d.issues.length + " possible issue(s) found. Review before relying on this translation.";
+      var meaning = d.issues.filter(function (i) { return i.impact === "meaning"; }).length;
+      var context = d.issues.length - meaning;
+      var summary = d.faithful ? "No dropped or changed meaning found." : meaning + " possible change(s) to meaning found. Review before relying on this translation.";
+      if (context > 0) summary += " " + context + " added explanation(s) the original does not contain (usually fine, but check you are happy with them).";
+      v.textContent = summary;
       d.issues.forEach(function (i) {
-        var div = document.createElement("div"); div.className = "issue";
-        var head = document.createElement("strong"); head.textContent = i.type + ": " + i.detail;
+        var div = document.createElement("div"); div.className = "issue " + i.impact;
+        var head = document.createElement("strong");
+        head.textContent = (i.impact === "meaning" ? "Meaning, " : "Added explanation, ") + i.type + ": " + i.detail;
         div.appendChild(head);
         [["Original", i.original], ["Translation", i.translation]].forEach(function (pair) {
           if (!pair[1]) return;

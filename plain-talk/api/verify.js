@@ -1,6 +1,8 @@
-// POST /api/verify  body: { original, translation }
+// POST /api/verify  body: { original, translation, industry? }
 // Compares a translation with its original and returns { faithful, issues }.
-// Separate from /api/translate so it is opt-in and can use a stronger model.
+// Each issue has an impact: "meaning" (the reader could be misled) or
+// "context" (only added background). Separate from /api/translate so it is
+// opt-in and can use a stronger model.
 
 import { buildVerifyRequest } from "./_prompts.js";
 import { createHandler, validateVerifyBody, HttpError } from "./_security.js";
@@ -20,11 +22,16 @@ export default createHandler({
       .filter((i) => i && typeof i === "object")
       .map((i) => ({
         type: ISSUE_TYPES.includes(i.type) ? i.type : "changed",
+        // Anything not clearly marked "context" is treated as a meaning issue.
+        impact: i.impact === "context" ? "context" : "meaning",
         original: str(i.original),
         translation: str(i.translation),
         detail: str(i.detail)
-      }));
-    // Never report "faithful" when issues were found, whatever the model said.
-    return { faithful: out.faithful === true && issues.length === 0, issues };
+      }))
+      // Meaning issues first.
+      .sort((a, b) => (a.impact === b.impact ? 0 : a.impact === "meaning" ? -1 : 1));
+    // Never report "faithful" when a meaning issue was found, whatever the model said.
+    const faithful = out.faithful === true && !issues.some((i) => i.impact === "meaning");
+    return { faithful, issues };
   }
 });

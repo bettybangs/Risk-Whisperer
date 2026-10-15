@@ -26,5 +26,6 @@ dt { font-weight:700; } dd { margin: 0 0 8px; }
 .verdict { padding:10px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); }
 .verdict.ok { border-color:var(--ok); } .verdict.bad { border-color:var(--bad); }
 .issue { margin:10px 0 0; padding-left:12px; border-left:3px solid var(--bad); }
+.issue.context { border-left-color: var(--warn); }
 .issue q { display:block; color:var(--muted); font-size:.9rem; }
 footer { margin-top:32px; font-size:.85rem; }
