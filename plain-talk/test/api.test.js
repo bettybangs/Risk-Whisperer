@@ -136,3 +136,9 @@ test("translator prompt forbids narrowing scope and unstated claims", () => {
   assert.match(s, /Hard rules: never write the words/);
   assert.match(s, /at most 3 gaps/);
 });
+
+test("verify prompt covers summary and glossary and skips plain term definitions", () => {
+  const s = buildVerifyRequest({ original: "a", translation: "b" }).system;
+  assert.match(s, /SUMMARY.*GLOSSARY/);
+  assert.match(s, /must not be listed/);
+});

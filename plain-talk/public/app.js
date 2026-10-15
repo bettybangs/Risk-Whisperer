@@ -45,7 +45,7 @@
       paragraphs($("original"), text);
       paragraphs($("plain"), d.plain);
       show($("cols"), !summaryOnly);
-      show($("verify"), !summaryOnly);
+      show($("verify"), true);
       show($("copy"), !summaryOnly);
       $("flags").textContent = "";
       d.flags.forEach(function (f) { var li = document.createElement("li"); li.textContent = f; $("flags").appendChild(li); });
@@ -57,7 +57,10 @@
         $("glossary").appendChild(dt); $("glossary").appendChild(dd);
       });
       show($("glossaryBox"), d.glossary.length > 0);
-      last = { original: text, translation: d.plain, industry: $("industry").value };
+      // The verifier checks everything the reader sees: summary, body, and glossary.
+      var checkText = "SUMMARY:\n" + d.summary + (d.plain ? "\n\nTRANSLATION:\n" + d.plain : "") +
+        (d.glossary.length ? "\n\nGLOSSARY:\n" + d.glossary.map(function (g) { return g.term + ": " + g.meaning; }).join("\n") : "");
+      last = { original: text, plain: d.plain, checkText: checkText, industry: $("industry").value };
       show($("results"), true);
     } catch (e) {
       setError(e.message);
@@ -71,7 +74,7 @@
     setError("");
     $("verify").disabled = true; $("verify").textContent = "Checking...";
     try {
-      var d = await post("/api/verify", last);
+      var d = await post("/api/verify", { original: last.original, translation: last.checkText, industry: last.industry });
       var box = $("verifyOut");
       box.textContent = "";
       var v = document.createElement("div");
@@ -84,7 +87,7 @@
       d.issues.forEach(function (i) {
         var div = document.createElement("div"); div.className = "issue " + i.impact;
         var head = document.createElement("strong");
-        head.textContent = (i.impact === "meaning" ? "Meaning, " : "Added explanation, ") + i.type + ": " + i.detail;
+        head.textContent = i.impact === "meaning" ? "Meaning, " + i.type + ": " + i.detail : "Added explanation: " + i.detail;
         div.appendChild(head);
         [["Original", i.original], ["Translation", i.translation]].forEach(function (pair) {
           if (!pair[1]) return;
@@ -103,7 +106,7 @@
 
   $("copy").addEventListener("click", function () {
     if (!last) return;
-    navigator.clipboard.writeText(last.translation).then(function () {
+    navigator.clipboard.writeText(last.plain || "").then(function () {
       $("copy").textContent = "Copied";
       setTimeout(function () { $("copy").textContent = "Copy translation"; }, 1500);
     }).catch(function () { setError("Could not copy. Select the text and copy it manually."); });
