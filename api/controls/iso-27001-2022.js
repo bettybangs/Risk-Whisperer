@@ -107,7 +107,7 @@ const TECHNOLOGICAL = [
   ["A.8.26", "Application security requirements"],
   ["A.8.27", "Secure architecture principles"],
   ["A.8.28", "Secure coding"],
-  ["A.8.29", "Security testing"],
+  ["A.8.29", "Security testing in development"],
   ["A.8.30", "Outsourced development"],
   ["A.8.31", "Separate dev, test and production"],
   ["A.8.32", "Change management"],
