@@ -7,6 +7,7 @@ import plainHandler from "../api/plain";
 import * as serverPrompts from "../api/_prompts";
 import { isAllowedOrigin } from "../api/_security";
 import { replaceEmDashes, stripEmDashes } from "../api/_claude";
+import { validateControls } from "../api/_validateControls";
 import { FRAMEWORKS, ENVS, CONTROL_FAMILIES } from "./options";
 
 const ORIGIN = "https://riskwhisperer.vercel.app";
@@ -182,7 +183,7 @@ describe("model calls", () => {
     const fetchMock = mockClaude("```json\n" + JSON.stringify(ASSESSMENT) + "\n```");
     const res = await call(assessHandler, makeReq({ framework: "SOC 2 Type I", env: "AWS", family: "Access Control", input: INPUT }));
     expect(res.statusCode).toBe(200);
-    expect(res.body.result).toEqual(ASSESSMENT);
+    expect(res.body.result).toEqual({ ...ASSESSMENT, validation: validateControls("SOC 2 Type I", ASSESSMENT.controlMappings) });
     const sent = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(sent.model).toBe("claude-haiku-4-5-20251001");
     expect(sent.max_tokens).toBe(6000);
@@ -213,7 +214,32 @@ describe("model calls", () => {
     mockClaude("Here is the assessment:\n" + JSON.stringify(ASSESSMENT) + "\nLet me know if you need more.");
     const res = await call(assessHandler, makeReq({ framework: "GDPR", env: "GCP", family: "Any (Auto-detect)", input: INPUT }));
     expect(res.statusCode).toBe(200);
-    expect(res.body.result).toEqual(ASSESSMENT);
+    expect(res.body.result).toEqual({ ...ASSESSMENT, validation: validateControls("GDPR", ASSESSMENT.controlMappings) });
+  });
+
+  test("assess: attaches ID validation for the selected framework", async () => {
+    const mappings = [
+      { id: "A.5.3", name: "n", rationale: "r" },
+      { id: "A.12.4.1", name: "n", rationale: "r" },
+      { id: "A.8.3.2", name: "n", rationale: "r" }
+    ];
+    mockClaude(JSON.stringify({ ...ASSESSMENT, controlMappings: mappings }));
+    let res = await call(assessHandler, makeReq({ framework: "ISO 27001:2022", env: "AWS", family: "Any (Auto-detect)", input: INPUT }));
+    expect(res.body.result.validation).toMatchObject({ hasList: true, listStatus: "draft", banner: null });
+    expect(res.body.result.validation.controls.map((c) => c.status)).toEqual(["listed", "unverified", "unverified"]);
+    // The mappings themselves are untouched.
+    expect(res.body.result.controlMappings).toEqual(mappings);
+
+    mockClaude(JSON.stringify({ ...ASSESSMENT, controlMappings: mappings }));
+    res = await call(assessHandler, makeReq({ framework: "PCI DSS v4.0", env: "AWS", family: "Any (Auto-detect)", input: INPUT }));
+    expect(res.body.result.validation.banner).toBe("AI-generated, verify control IDs before use.");
+  });
+
+  test("assess: a validation key in the model's own output is overwritten", async () => {
+    mockClaude(JSON.stringify({ ...ASSESSMENT, validation: { hasList: true, banner: null, controls: [] } }));
+    const res = await call(assessHandler, makeReq({ framework: "GDPR", env: "AWS", family: "Any (Auto-detect)", input: INPUT }));
+    expect(res.body.result.validation.hasList).toBe(false);
+    expect(res.body.result.validation.banner).toBeTruthy();
   });
 
   test("assess: a reply cut off at max_tokens gets its own message", async () => {
