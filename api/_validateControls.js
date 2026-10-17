@@ -4,7 +4,7 @@
 // only reports. IDs are compared exactly (surrounding whitespace is ignored),
 // so "a.5.3" and "A.5.3." do not match "A.5.3".
 
-import { CONTROL_LISTS } from "./controls/index.js";
+import { CONTROL_LISTS, ID_NORMALIZERS } from "./controls/index.js";
 
 export const NO_LIST_BANNER = "AI-generated, verify control IDs before use.";
 
@@ -39,6 +39,7 @@ export function validateControls(frameworkId, controls) {
   }
 
   var valid = idSetFor(list);
+  var normalize = Object.prototype.hasOwnProperty.call(ID_NORMALIZERS, frameworkId) ? ID_NORMALIZERS[frameworkId] : function(id) { return id.trim(); };
   return {
     frameworkId: frameworkId,
     hasList: true,
@@ -46,7 +47,7 @@ export function validateControls(frameworkId, controls) {
     banner: null,
     controls: items.map(function(c) {
       var id = idOf(c);
-      return { id: id, status: typeof id === "string" && valid.has(id.trim()) ? "listed" : "unverified" };
+      return { id: id, status: typeof id === "string" && valid.has(normalize(id)) ? "listed" : "unverified" };
     })
   };
 }

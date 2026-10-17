@@ -634,6 +634,11 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
     ⚠ Unverified ID
   </span>
 )}
+{idStatus === "listed" && result.validation.listStatus === "verified" && !framework.startsWith("SOC 2") && (
+  <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
+    ID on verified list
+  </span>
+)}
 {idStatus === "listed" && result.validation.listStatus === "draft" && (
   <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
     ID list pending verification

@@ -4,6 +4,7 @@
 import { validateControls, NO_LIST_BANNER } from "../api/_validateControls";
 import { FRAMEWORKS } from "../api/_prompts";
 import { CONTROL_LISTS } from "../api/controls";
+import { normalizeNist80053Id } from "../api/controls/normalize";
 
 const ISO = "ISO 27001:2022";
 const statuses = (framework, ids) =>
@@ -71,9 +72,9 @@ describe("validateControls: frameworks without a list", () => {
     expect(validateControls("constructor", [{ id: "X" }]).banner).toBe(NO_LIST_BANNER);
   });
 
-  test("only ISO 27001:2022 and SOC 2 have lists so far", () => {
+  test("only NIST 800-53, ISO 27001:2022 and SOC 2 have lists so far", () => {
     const withList = FRAMEWORKS.filter((fw) => validateControls(fw, []).hasList);
-    expect(withList).toEqual([ISO, "SOC 2 Type I", "SOC 2 Type II"]);
+    expect(withList).toEqual(["NIST SP 800-53 Rev 5", ISO, "SOC 2 Type I", "SOC 2 Type II"]);
   });
 });
 
@@ -87,5 +88,43 @@ describe("validateControls: SOC 2 (read-only use of the existing criteria)", () 
 
   test("the SOC 2 list has all 61 criteria", () => {
     expect(CONTROL_LISTS["SOC 2 Type I"].controls).toHaveLength(61);
+  });
+});
+
+describe("validateControls: NIST SP 800-53 Rev 5", () => {
+  const NIST = "NIST SP 800-53 Rev 5";
+
+  test("current controls and enhancements are listed, and the list is verified", () => {
+    const out = validateControls(NIST, [{ id: "AC-2" }, { id: "AC-2(1)" }, { id: "SI-7(17)" }]);
+    expect(out).toMatchObject({ hasList: true, listStatus: "verified", banner: null });
+    expect(out.controls.map((c) => c.status)).toEqual(["listed", "listed", "listed"]);
+  });
+
+  test("case and zero-padding are ignored", () => {
+    expect(statuses(NIST, ["ac-2", "AC-02", "AC-02(01)", " ac-2(1) "])).toEqual(Array(4).fill("listed"));
+  });
+
+  test("made-up IDs, the dotted form, and other spellings are unverified", () => {
+    expect(statuses(NIST, ["AC-99", "AC-2.1", "AC-2 (1)", "AC-2(99)", "XX-1", "A.8.15", "CC6.1"])).toEqual(Array(7).fill("unverified"));
+  });
+
+  test("withdrawn controls are not valid", () => {
+    expect(statuses(NIST, ["AC-13", "AC-2(10)", "AC-3(1)"])).toEqual(Array(3).fill("unverified"));
+  });
+
+  test("the model's spelling is returned as given", () => {
+    expect(validateControls(NIST, [{ id: "ac-02" }]).controls).toEqual([{ id: "ac-02", status: "listed" }]);
+  });
+
+  test("normalizeNist80053Id", () => {
+    expect(normalizeNist80053Id(" ac-02(01) ")).toBe("AC-2(1)");
+    expect(normalizeNist80053Id("AC-10")).toBe("AC-10");
+    expect(normalizeNist80053Id("AC-2.1")).toBe("AC-2.1");
+  });
+
+  test("NIST SP 800-171, CMMC 2.0 and CSF 2.0 do not borrow the 800-53 list", () => {
+    ["NIST SP 800-171", "CMMC 2.0", "NIST CSF 2.0"].forEach((fw) => {
+      expect(validateControls(fw, [{ id: "AC-2" }]).banner).toBe(NO_LIST_BANNER);
+    });
   });
 });

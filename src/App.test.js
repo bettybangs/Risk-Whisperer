@@ -191,3 +191,20 @@ test('a saved history entry without validation shows "not validated"', async () 
   expect(screen.getByRole('note')).toHaveTextContent('Control IDs not validated');
   expect(screen.queryByText(/Unverified ID|pending verification/)).toBeNull();
 });
+
+test('NIST 800-53 (verified list): listed IDs say so, unverified IDs are flagged, no banner', async () => {
+  await runAssessment('NIST SP 800-53 Rev 5', {
+    ...BASE_RESULT,
+    controlMappings: [
+      { id: 'AC-2', name: 'Account Management', rationale: 'Accounts are reviewed.' },
+      { id: 'AC-99', name: 'Made up', rationale: 'Invented.' }
+    ],
+    validation: {
+      frameworkId: 'NIST SP 800-53 Rev 5', hasList: true, listStatus: 'verified', banner: null,
+      controls: [{ id: 'AC-2', status: 'listed' }, { id: 'AC-99', status: 'unverified' }]
+    }
+  });
+  expect(screen.getAllByText('ID on verified list')).toHaveLength(1);
+  expect(screen.getAllByText('⚠ Unverified ID')).toHaveLength(1);
+  expect(screen.queryByRole('note')).toBeNull();
+});
