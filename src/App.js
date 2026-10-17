@@ -114,6 +114,22 @@ export const SOC2_CONTROLS = {
   "P7.1": "Privacy: Quality of Personal Information",
   "P8.1": "Privacy: Monitoring & Enforcement",
 };
+// Shown for results saved before the server started checking control IDs.
+export const NOT_VALIDATED_NOTE = "Control IDs not validated (this result was saved before ID checks were added).";
+
+// ID status ("listed", "unverified", "unchecked") for each control the server
+// validated (api/_validateControls.js), keyed by ID. Empty when the result
+// has no validation.
+export function idStatusById(validation) {
+  var map = {};
+  if (validation && Array.isArray(validation.controls)) {
+    validation.controls.forEach(function(v) {
+      if (v && typeof v.id === "string") map[v.id.trim()] = v.status;
+    });
+  }
+  return map;
+}
+
 export default function App() {
   const [input, setInput] = useState("");
   const [env, setEnv] = useState("AWS");
@@ -575,7 +591,7 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
   })}
 </Card>
 
-               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { copySection(result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale + (c.weakFit ? " (Weak fit: " + c.weakFit + (c.weakFitUnverified ? ", judged without a verified definition" : "") + ")" : ""); }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
+               <Card title={framework + " control mappings"} accent="#c8a830" onCopy={function() { var statuses = idStatusById(result.validation); var banner = result.validation && result.validation.banner ? result.validation.banner + "\n\n" : ""; copySection(banner + result.controlMappings.map(function(c) { return c.id + " - " + (SOC2_CONTROLS[c.id] || c.name) + ": " + c.rationale + (c.weakFit ? " (Weak fit: " + c.weakFit + (c.weakFitUnverified ? ", judged without a verified definition" : "") + ")" : "") + (statuses[c.id] === "unverified" ? " [Unverified ID]" : ""); }).join("\n\n"), "controls"); }} copied={copied === "controls"}>
   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
     {result.controlMappings.map(function(c, i) {
       return framework.indexOf("NIST") === 0 ? (
@@ -585,8 +601,15 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
       );
     })}
   </div>
+  {result.validation && result.validation.banner && (
+    <p role="note" style={{ fontSize: 12, color: "#e0a040", margin: "0 0 12px", lineHeight: 1.6 }}>⚠ {result.validation.banner}</p>
+  )}
+  {!result.validation && (
+    <p role="note" style={{ fontSize: 12, color: "#a89060", margin: "0 0 12px", lineHeight: 1.6 }}>{NOT_VALIDATED_NOTE}</p>
+  )}
   <ul style={{ paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: 8 }}>
   {result.controlMappings.map(function(c, i) {
+              const idStatus = idStatusById(result.validation)[c.id];
               const displayName = SOC2_CONTROLS[c.id] || c.name;
               return (
                 <li key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#d8c8a8" }}>
@@ -604,6 +627,16 @@ parsed.potentialWeaknesses = parsed.potentialWeaknesses.map(function(w, i) {
 {SOC2_CONTROLS[c.id] && framework.startsWith("SOC 2") && (
   <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
     Control name verified · explanation AI-generated
+  </span>
+)}
+{idStatus === "unverified" && (
+  <span style={{ display: "block", fontSize: 11, color: "#e0a040", marginTop: 4 }}>
+    ⚠ Unverified ID
+  </span>
+)}
+{idStatus === "listed" && result.validation.listStatus === "draft" && (
+  <span style={{ display: "block", fontSize: 10, color: "#a89060", marginTop: 4, fontStyle: "italic" }}>
+    ID list pending verification
   </span>
 )}
                 </li>
