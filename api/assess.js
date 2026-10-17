@@ -5,11 +5,12 @@ import { buildAssessRequest } from "./_prompts.js";
 import { createHandler, validateAssessBody, HttpError } from "./_security.js";
 import { callClaude, parseModelJson } from "./_claude.js";
 import { validateControls } from "./_validateControls.js";
+import { stripLeakedPhrases } from "./_leakFilter.js";
 
 export default createHandler({
   validate: validateAssessBody,
   run: async function(data) {
-    var result = parseModelJson(await callClaude(buildAssessRequest(data)));
+    var result = stripLeakedPhrases(parseModelJson(await callClaude(buildAssessRequest(data))));
     if (result === null || typeof result !== "object" || Array.isArray(result)) {
       throw new HttpError(502, "Unexpected JSON from the AI. Please try again.");
     }

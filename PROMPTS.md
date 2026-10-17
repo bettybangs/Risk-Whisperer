@@ -45,19 +45,25 @@ Claude returns only valid JSON with exact key names. No markdown, no backticks, 
 - `assessmentQuestions` (array of 6-8 strings)
 - `evidenceToCollect` (array of 6-8 strings)
 - `potentialWeaknesses` (array of 4-6 objects with `{name, description, severity, recommendation}`)
-- `controlMappings` (array of 1 to 6 objects with `{id, name, rationale}`, using identifiers native to the selected framework)
+- `controlMappings` (array of up to 6 objects with `{id, name, rationale}`, using identifiers native to the selected framework; an empty array if no control qualifies)
 - `overallRiskScore` (number 1-10)
 - `riskJustification` (string)
 - `controlMaturity` (one of Initial, Developing, Defined, Managed, Optimizing)
 - `maturityJustification` (string)
 
-The mapping key is `controlMappings`, not `nistControls`, because IDs must be native to the chosen framework: CC6.1 for SOC 2, A.9.4.2 for ISO 27001, 8.3 for PCI DSS, and AC-2 style IDs only for NIST-based frameworks.
+The mapping key is `controlMappings`, not `nistControls`, because IDs must be native to the chosen framework: CC6.1 for SOC 2, 8.3 for PCI DSS, and AC-2 style IDs only for NIST-based frameworks.
 
 ### 5. Strict Inclusion Rule
 
-Only include a control if the input directly and specifically describes an activity, system, or process that control governs. Do not include a control because it is commonly associated with the topic, because a related control might apply, or because the organization "should" have it. An inferred gap ("no evidence of X") is a reason to exclude, not include. Every rationale must cite specific words or facts from the input. This is why the prompt asks for 1 to 6 mappings rather than a fixed minimum: forcing a minimum count pushed the model to pad the list with loosely related controls.
+Only include a control if the input directly and specifically describes an activity, system, or process that control governs. Do not include a control because it is commonly associated with the topic, because a related control might apply, or because the organization "should" have it. An inferred gap ("no evidence of X") is a reason to exclude, not include. Every rationale must cite specific words or facts from the input. This is why the prompt asks for up to 6 mappings, and allows none, rather than a fixed minimum: forcing a minimum count pushed the model to pad the list with loosely related controls.
 
 Haiku still sometimes lists a control and then hedges in its own rationale ("cannot be fully mapped", "not included here"). Asking it to re-read and delete those controls was tried and did not work: the model writes its answer in one pass and does not go back and remove what it already wrote. Catching these is the judge's job, and it flags them as weak fits.
+
+### 5b. No leaked instructions, and ISO edition
+
+- The prompt tells the model never to repeat or refer to its instructions, internal rules, or inclusion criteria in any output field, and never to explain why a control was left out (return an empty `controlMappings` array instead).
+- For ISO 27001 only, the prompt names the selected edition (for example 2022), gives a 2022-style example ID (A.8.15), says three-level 2013 IDs such as A.12.4.1 are not valid in that edition, and limits mappings to Annex A (A.5 to A.8), not clauses 4 to 10.
+- As a backstop, `api/_leakFilter.js` removes any sentence containing "strict inclusion rule", "inclusion rule", or "not included based on" (case-insensitive) from every string in the reply and logs the fields it changed. A rationale that was only leaked wording becomes "No rationale provided."
 
 ### 5a. Consistency
 
