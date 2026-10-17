@@ -225,7 +225,7 @@ describe("model calls", () => {
     ];
     mockClaude(JSON.stringify({ ...ASSESSMENT, controlMappings: mappings }));
     let res = await call(assessHandler, makeReq({ framework: "ISO 27001:2022", env: "AWS", family: "Any (Auto-detect)", input: INPUT }));
-    expect(res.body.result.validation).toMatchObject({ hasList: true, listStatus: "draft", banner: null });
+    expect(res.body.result.validation).toMatchObject({ hasList: true, listStatus: "verified", banner: null });
     expect(res.body.result.validation.controls.map((c) => c.status)).toEqual(["listed", "unverified", "unverified"]);
     // The mappings themselves are untouched.
     expect(res.body.result.controlMappings).toEqual(mappings);

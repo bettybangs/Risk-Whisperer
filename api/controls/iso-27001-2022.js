@@ -4,9 +4,9 @@
 // standard is reproduced. The titles are paraphrases for display and review,
 // not the official control names.
 //
-// listStatus is "draft" until the owner has checked every ID against their
-// copy of the standard and changed it to "verified". The UI must not call a
-// draft list "Verified".
+// listStatus is "verified": the owner checked every ID against their copy of
+// the standard (see verified below). It was "draft" before that, and the UI
+// does not call a draft list "Verified".
 //
 // Not covered: the ISMS clauses (4 to 10), which are not Annex A controls.
 
@@ -121,7 +121,8 @@ function tag(rows, category) {
 
 export default {
   frameworkId: "ISO 27001:2022",
-  listStatus: "draft",
+  listStatus: "verified",
+  verified: "2026-10-17: IDs checked against the owner's copy of ISO/IEC 27001:2022 Annex A.",
   crossChecked: "2026-10-17: IDs and titles compared against two commercial secondary sources (gaicc.org, dataguard.com). Not verified against the standard.",
   controls: [].concat(
     tag(ORGANIZATIONAL, "organizational"),

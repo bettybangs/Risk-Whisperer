@@ -40,11 +40,11 @@ describe("validateControls: ISO 27001:2022", () => {
     expect(out.controls.map((c) => c.status)).toEqual(Array(5).fill("unverified"));
   });
 
-  test("reports the list status (draft) and no banner; does not touch the input", () => {
+  test("reports the list status (verified) and no banner; does not touch the input", () => {
     const input = [{ id: "A.5.3", name: "Segregation of duties" }];
     const copy = JSON.parse(JSON.stringify(input));
     const out = validateControls(ISO, input);
-    expect(out).toMatchObject({ frameworkId: ISO, hasList: true, listStatus: "draft", banner: null });
+    expect(out).toMatchObject({ frameworkId: ISO, hasList: true, listStatus: "verified", banner: null });
     expect(out.controls).toEqual([{ id: "A.5.3", status: "listed" }]);
     expect(input).toEqual(copy);
   });

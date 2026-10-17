@@ -3,7 +3,8 @@
 // no list, and validateControls flags its whole result instead.
 //
 // Each entry is { frameworkId, listStatus, controls: [{ id, ... }] }.
-// listStatus "draft" means the IDs have not been checked against the standard.
+// listStatus "draft" means the IDs have not been checked against the standard;
+// "verified" means they have.
 
 import { SOC2_GROUNDED_DEFINITIONS } from "../_prompts.js";
 import iso27001 from "./iso-27001-2022.js";

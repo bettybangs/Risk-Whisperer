@@ -6,9 +6,10 @@ import iso from "../api/controls/iso-27001-2022";
 const byCategory = (cat) => iso.controls.filter((c) => c.category === cat);
 
 describe("ISO 27001:2022 Annex A control list", () => {
-  test("is marked draft until the owner signs off", () => {
+  test("is marked verified after the owner's check against the standard", () => {
     expect(iso.frameworkId).toBe("ISO 27001:2022");
-    expect(iso.listStatus).toBe("draft");
+    expect(iso.listStatus).toBe("verified");
+    expect(iso.verified).toContain("2026-10-17");
   });
 
   test("records the secondary-source cross-check and says it is not verified against the standard", () => {
