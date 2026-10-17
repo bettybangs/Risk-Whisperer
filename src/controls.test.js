@@ -11,6 +11,11 @@ describe("ISO 27001:2022 Annex A control list", () => {
     expect(iso.listStatus).toBe("draft");
   });
 
+  test("records the secondary-source cross-check and says it is not verified against the standard", () => {
+    expect(iso.crossChecked).toContain("2026-10-17");
+    expect(iso.crossChecked).toContain("Not verified against the standard.");
+  });
+
   test("has 93 controls split 37 / 8 / 14 / 34 by category", () => {
     expect(iso.controls).toHaveLength(93);
     expect(byCategory("organizational")).toHaveLength(37);

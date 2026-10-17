@@ -122,6 +122,7 @@ function tag(rows, category) {
 export default {
   frameworkId: "ISO 27001:2022",
   listStatus: "draft",
+  crossChecked: "2026-10-17: IDs and titles compared against two commercial secondary sources (gaicc.org, dataguard.com). Not verified against the standard.",
   controls: [].concat(
     tag(ORGANIZATIONAL, "organizational"),
     tag(PEOPLE, "people"),
