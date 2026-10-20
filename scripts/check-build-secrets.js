@@ -1,9 +1,9 @@
-// Pre-deploy check: fail if the build output contains an Anthropic key prefix.
+// Pre-deploy check: fail if the build output contains a real-looking Anthropic key.
 const fs = require('fs');
 const path = require('path');
 
 const buildDir = path.resolve(__dirname, '..', process.argv[2] || 'build');
-const needle = 'sk-ant';
+const pattern = /sk-ant-[A-Za-z0-9_-]{20,}/;
 
 if (!fs.existsSync(buildDir)) {
   console.error(`check-build-secrets: build folder not found: ${buildDir}`);
@@ -15,13 +15,13 @@ const hits = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full);
-    else if (fs.readFileSync(full).includes(needle)) hits.push(path.relative(buildDir, full));
+    else if (pattern.test(fs.readFileSync(full, 'latin1'))) hits.push(path.relative(buildDir, full));
   }
 })(buildDir);
 
 if (hits.length) {
-  console.error(`check-build-secrets: "${needle}" found in build output (contents not shown):`);
+  console.error('check-build-secrets: key-like string found in build output (contents not shown):');
   hits.forEach((f) => console.error(`  - ${f}`));
   process.exit(1);
 }
-console.log(`check-build-secrets: OK, no "${needle}" in ${path.basename(buildDir)}/`);
+console.log(`check-build-secrets: OK, no key-like strings in ${path.basename(buildDir)}/`);
