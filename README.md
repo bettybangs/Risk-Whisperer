@@ -232,3 +232,4 @@ Companion project: [grc-evidence-collector](https://github.com/bettybangs/grc-ev
 *Risk Whisperer is a portfolio and educational tool. Outputs should be reviewed by a qualified GRC professional before use in formal audits or compliance programs.*
 
 Copyright (c) 2026 Beth Gerharts. All rights reserved.
+
