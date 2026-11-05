@@ -1,7 +1,8 @@
 // POST /api/judge  body: { framework, input, controlMappings }
-// Opus 5 checks each mapped control against the official AICPA text and
-// returns one judgment per control. The app keeps the original mappings if
-// this call fails. Protections are described in api/_security.js.
+// Opus 5 checks each mapped control against verified summaries of the AICPA
+// 2017 Trust Services Criteria and returns one judgment per control. The app
+// keeps the original mappings if this call fails. Protections are described
+// in api/_security.js.
 
 import { buildJudgeRequest, selectControlsToJudge, isVerifiedControl } from "./_prompts.js";
 import { createHandler, validateJudgeBody, HttpError } from "./_security.js";

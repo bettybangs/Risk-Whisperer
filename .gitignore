@@ -1,5 +1,8 @@
-.env 
-node_modules 
+node_modules
+.env
+.env.*
+!.env.example
+build
 job-scout/out/
 job-scout/seen.json
 job-scout/resume.txt

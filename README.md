@@ -3,6 +3,8 @@
 
 Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security controls against major compliance frameworks. Paste in a control description or system detail and instantly receive assessment questions, evidence requirements, potential weaknesses with remediation recommendations, and framework control mappings: the same outputs a senior GRC analyst would produce manually.
 
+[![Tests](https://github.com/bettybangs/Risk-Whisperer/actions/workflows/test.yml/badge.svg)](https://github.com/bettybangs/Risk-Whisperer/actions/workflows/test.yml)
+
 🔗 **Live app:** [riskwhisperer.vercel.app](https://riskwhisperer.vercel.app)
 
 ### 💻 Tech Talk View
@@ -10,6 +12,22 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 ### 💬 Plain Talk View
 ![Plain Talk View](screenshot-plain-talk.png)
+
+---
+
+## Sample Run
+
+Real input and the headline results from the app (framework: NIST SP 800-53 Rev 5, environment: AWS). The full report is in the Tech Talk screenshot above.
+
+> **Input:** Our AWS environment uses IAM roles with least-privilege policies attached to all EC2 instances and Lambda functions. There are no IAM users with programmatic access keys in production. MFA is enforced on all human IAM users via a Service Control Policy at the AWS Organizations level.
+
+| Output | Result |
+|---|---|
+| Risk Score | 4 / 10 |
+| Control Maturity | Managed |
+| Why | Strong foundations (least-privilege roles, no static credentials, enforced MFA). Moderate risk remains from missing continuous policy validation, incomplete cross-account and service-to-service role controls, and no documented privilege escalation detection. |
+
+Assessment questions, evidence to collect, weaknesses with recommendations, and control mappings are generated for the same input and can be expanded in the app.
 
 ---
 
@@ -33,23 +51,23 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 | Step | Model | Endpoint | What it does |
 |---|---|---|---|
 | Assessment | Claude Haiku 4.5 (6000 max tokens, temperature 0) | `/api/assess` | Produces the full assessment as JSON, including 1 to 6 `controlMappings` |
-| Judge | Claude Opus 5 (4000 max tokens, medium effort) | `/api/judge` | Checks each mapped control against the official AICPA 2017 Trust Services Criteria text and flags weak fits |
+| Judge | Claude Opus 5 (4000 max tokens, medium effort) | `/api/judge` | Checks each mapped control against verified summaries of the AICPA 2017 Trust Services Criteria and flags weak fits |
 | Plain Talk | Claude Haiku 4.5 (6000 max tokens) | `/api/plain` | Rewrites the findings in plain business language, on demand |
 
 **Strict inclusion rule.** The assessment prompt tells the model to map a control only when the input directly and specifically describes something that control governs. A control that is merely related to the topic, or that would apply only because something is missing, is left out. Every rationale must cite words or facts from the input.
 
-**The judge.** After the assessment, the app sends the mapped controls to `/api/judge`. The judge is grounded in the official AICPA 2017 Trust Services Criteria text for all 61 criteria (CC1.1 through P8.1). For each control it writes a rationale that stays within what the criterion actually covers and decides whether the control is a good fit. For SOC 2, every mapped control is judged; for other frameworks, only controls that have an official SOC 2 definition are judged. If the judge call fails, the assessment is shown with its original rationales.
+**The judge.** After the assessment, the app sends the mapped controls to `/api/judge`. The judge is grounded in verified summaries of the AICPA 2017 Trust Services Criteria for all 61 criteria (CC1.1 through P8.1). For each control it writes a rationale that stays within what the criterion actually covers and decides whether the control is a good fit. For SOC 2, every mapped control is judged; for other frameworks, only controls that have a verified SOC 2 summary are judged. If the judge call fails, the assessment is shown with its original rationales.
 
 **Flag, never delete.** A control the judge considers a weak fit stays in the list with a ⚠ Weak fit note explaining what the criterion covers that the input does not describe. Nothing is silently removed, so the reviewer makes the final call.
 
-**Verified vs AI-generated labels.** For SOC 2, each mapping shows either "Control name verified · explanation AI-generated" (the name comes from the app's table checked against the AICPA source) or "Control name AI-generated, not yet verified against source". A weak-fit flag on a control with no official definition says it was "judged without a verified definition". Only controls with an official definition may have their rationale rewritten by the judge.
+**Verified vs AI-generated labels.** For SOC 2, each mapping shows either "Control name verified · explanation AI-generated" (the name comes from the app's table checked against the AICPA source) or "Control name AI-generated, not yet verified against source". A weak-fit flag on a control with no verified summary says it was "judged without a verified definition". Only controls with a verified summary may have their rationale rewritten by the judge.
 
 ---
 
 ## Features
 
 - 💻 **Tech Talk / 💬 Plain Talk toggle**: switch output between GRC technical language and plain language for executives, legal, or finance stakeholders. The translation is generated on demand by a separate call and cached, so toggling back and forth is instant
-- ⚖️ **Second-opinion judge**: Opus 5 checks every SOC 2 mapping against the official criteria text and flags weak fits without deleting them
+- ⚖️ **Second-opinion judge**: Opus 5 checks every SOC 2 mapping against verified summaries of the AICPA 2017 Trust Services Criteria and flags weak fits without deleting them
 - 🏷 **Verified vs AI-generated labels**: see at a glance which control names were checked against the AICPA source
 - 🧾 **SOC 2 Type I and Type II**: Type I focuses on design and point-in-time evidence; Type II focuses on operating effectiveness across an observation period
 - 🔒 **Server-side prompts**: prompts, model choice, and the API key all live on the server (see Security below)
@@ -68,21 +86,23 @@ Risk Whisperer is a GRC portfolio tool that uses Claude AI to assess security co
 
 ## Supported Frameworks (15)
 
-- NIST SP 800-53 Rev 5
-- NIST CSF 2.0
-- FedRAMP Moderate
-- FedRAMP High
-- CIS Controls v8
-- ISO 27001:2022
-- SOC 2 Type I
-- SOC 2 Type II
-- PCI DSS v4.0
-- HIPAA Security Rule
-- CMMC 2.0
-- CISA Zero Trust Maturity Model
-- NIST SP 800-171
-- NERC CIP
-- GDPR
+| Framework | Area |
+|---|---|
+| NIST SP 800-53 Rev 5 | US federal security controls |
+| NIST SP 800-171 | Protecting controlled unclassified information |
+| NIST CSF 2.0 | Cybersecurity risk management |
+| FedRAMP Moderate / High | US federal cloud authorization |
+| CMMC 2.0 | US defense contractors |
+| CISA Zero Trust Maturity Model | Zero trust adoption |
+| ISO 27001:2022 | International ISMS standard |
+| SOC 2 Type I / Type II | Trust Services Criteria, with a verified AICPA reference and judge check (see above) |
+| CIS Controls v8 | Prioritized security safeguards |
+| PCI DSS v4.0 | Payment card data |
+| HIPAA Security Rule | Health information |
+| NERC CIP | Electric grid reliability |
+| GDPR | EU data protection |
+
+Only SOC 2 has the verified criteria reference and the judge check. For the other frameworks, control IDs and names are AI-generated and should be checked against the source.
 
 ## Supported Cloud Environments
 
@@ -135,15 +155,24 @@ Add `ANTHROPIC_API_KEY` as an environment variable in your Vercel project settin
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    A[Browser: input + dropdowns] --> B[Client injection check]
+    B --> C["/api/assess<br/>origin, method, content-type,<br/>field + size validation,<br/>server injection screen"]
+    C --> D[Claude Haiku 4.5<br/>server-side prompt]
+    D --> E[Assessment JSON]
+    E --> F["/api/judge<br/>same validation"]
+    F --> G[Claude Opus 5<br/>checks mappings vs AICPA text]
+    G --> H[Report: weak fits flagged]
+    H --> I["/api/plain<br/>on demand"]
+    H --> J[PDF export + POA&M tracking]
 ```
-Browser ──{ framework, env, family, input }──────► /api/assess ──► Anthropic API (Haiku 4.5)
-Browser ──{ framework, input, controlMappings }──► /api/judge  ──► Anthropic API (Opus 5)
-Browser ──{ result }─────────────────────────────► /api/plain  ──► Anthropic API (Haiku 4.5)
-```
+
+Each endpoint is its own request, and the API key lives only in the Vercel environment.
 
 | File | Purpose |
 |---|---|
-| `api/_prompts.js` | Every system prompt, the SOC 2 reference text, the official AICPA text for all 61 criteria, and the model settings |
+| `api/_prompts.js` | Every system prompt, the SOC 2 reference text, verified summaries of the AICPA 2017 Trust Services Criteria for all 61 criteria, and the model settings |
 | `api/_security.js` | Origin, method, and content-type checks, field validation, and the prompt-injection screen |
 | `api/_claude.js` | The single Anthropic API call, with the key and a time limit |
 | `api/assess.js`, `api/judge.js`, `api/plain.js` | One endpoint per model call |
@@ -172,6 +201,22 @@ The comment block at the top of `api/_security.js` explains each protection in t
 
 ---
 
+## Tests
+
+`npm test` runs 27 tests (`src/api.test.js`, `src/App.test.js`) against the API handlers with the Anthropic call mocked. They cover method, origin, and content-type checks, rejection of browser-supplied prompts and model names, field and size validation, the model settings each endpoint uses, error mapping, and em-dash removal. GitHub Actions runs them on every push and pull request.
+
+---
+
+## Known Limitations
+
+- **Injection screening is pattern-based.** It catches common phrases, not every paraphrase, and it can flag legitimate input that contains words like "expose" or "leak". Server-side prompts and strict output validation are the stronger defenses.
+- **No authentication or rate limiting.** The origin allowlist is not authentication. Anyone who can reach the app can spend API quota.
+- **Only SOC 2 is verified.** Other frameworks' control IDs and names come from the model.
+- **No server-side storage.** History and POA&M entries live in the browser's localStorage.
+- **A model, not an auditor.** Outputs are a starting point for a qualified reviewer.
+
+---
+
 ## Job Scout
 
 `job-scout/` is a separate tool in this repo. It searches job boards every day for GRC and IAM roles that match your profile and opens a GitHub issue with the results. See [job-scout/README.md](job-scout/README.md).
@@ -188,4 +233,9 @@ See [PROMPTS.md](PROMPTS.md) for the prompt design.
 
 ---
 
+Companion project: [grc-evidence-collector](https://github.com/bettybangs/grc-evidence-collector) checks that specific technical controls are actually enforced and saves timestamped evidence. Risk Whisperer assesses controls from a written description; the collector verifies them in the live system.
+
 *Risk Whisperer is a portfolio and educational tool. Outputs should be reviewed by a qualified GRC professional before use in formal audits or compliance programs.*
+
+Copyright (c) 2026 Beth Gerharts. All rights reserved.
+

@@ -48,7 +48,7 @@ const styles = `
 
 // Verified against AICPA Trust Services Criteria: fill in more entries over time.
 // Only entries listed here override the AI's generated name; anything missing falls back to Claude's own text.
-const SOC2_CONTROLS = {
+export const SOC2_CONTROLS = {
   // Verified against the actual AICPA 2017 TSC document (TSP Section 100)
   "CC1.1": "Control Environment: Commitment to Integrity & Ethical Values",
   "CC1.2": "Control Environment: Board Independence & Oversight",
@@ -98,9 +98,19 @@ const SOC2_CONTROLS = {
   "P1.1": "Privacy: Notice to Data Subjects",
   "P2.1": "Privacy: Choice & Consent",
   "P3.1": "Privacy: Collection of Personal Information",
-  "P4.1": "Privacy: Use, Retention & Disposal",
+  "P3.2": "Privacy: Explicit Consent Before Collection",
+  "P4.1": "Privacy: Use Limited to Stated Purposes",
+  "P4.2": "Privacy: Retention of Personal Information",
+  "P4.3": "Privacy: Secure Disposal of Personal Information",
   "P5.1": "Privacy: Access by Data Subjects",
-  "P6.1": "Privacy: Disclosure & Notification to Third Parties",
+  "P5.2": "Privacy: Correction & Amendment by Data Subjects",
+  "P6.1": "Privacy: Disclosure With Explicit Consent",
+  "P6.2": "Privacy: Record of Authorized Disclosures",
+  "P6.3": "Privacy: Record of Unauthorized Disclosures & Breaches",
+  "P6.4": "Privacy: Privacy Commitments From Vendors & Third Parties",
+  "P6.5": "Privacy: Vendor Notice of Unauthorized Disclosures",
+  "P6.6": "Privacy: Breach & Incident Notification",
+  "P6.7": "Privacy: Accounting of Personal Information to Data Subjects",
   "P7.1": "Privacy: Quality of Personal Information",
   "P8.1": "Privacy: Monitoring & Enforcement",
 };
