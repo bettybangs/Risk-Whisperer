@@ -219,7 +219,7 @@ The comment block at the top of `api/_security.js` explains each protection in t
 
 ## Job Scout
 
-`job-scout/` is a separate tool in this repo. It searches job boards every day for GRC and IAM roles that match your profile and opens a GitHub issue with the results. See [job-scout/README.md](job-scout/README.md).
+`job-scout/` is a separate tool in this repo. It searches job boards every day for remote and hybrid US GRC and IAM roles that fit your rules, and opens a GitHub issue that ranks each hit by tier and fit. See [job-scout/README.md](job-scout/README.md).
 
 ---
 

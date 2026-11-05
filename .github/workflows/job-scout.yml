@@ -52,8 +52,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           JOB_SCOUT_RESUME: ${{ secrets.JOB_SCOUT_RESUME }}
-          USAJOBS_API_KEY: ${{ secrets.USAJOBS_API_KEY }}
-          USAJOBS_EMAIL: ${{ secrets.USAJOBS_EMAIL }}
+          JOB_SCOUT_SKIP: ${{ secrets.JOB_SCOUT_SKIP }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
         run: node scout.js ${{ inputs.show_all && '--all' || '' }} > /dev/null

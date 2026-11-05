@@ -1,5 +1,8 @@
 // Fetchers for public job-board APIs. Each returns postings in one shape:
-//   { id, source, company, title, location, remote, url, postedAt, description, salary }
+//   { id, source, company, title, location, remote, workplace, url, postedAt, description, salary }
+//
+// `workplace` is the board's own remote / hybrid / onsite label, or null when
+// the board has none; filter.js works out the final location type.
 //
 // Only official, documented JSON endpoints are used. Sites such as LinkedIn
 // and Indeed forbid scraping in their terms and block it, so they are
@@ -36,6 +39,8 @@ function decodeEntities(s) {
     .replace(/&amp;/g, "&");
 }
 
+const WORKPLACE = { remote: "remote", hybrid: "hybrid", onsite: "onsite", "on-site": "onsite" };
+
 function looksRemote(...fields) {
   return fields.some((f) => /\bremote\b/i.test(String(f || "")));
 }
@@ -51,6 +56,7 @@ export function normalizeGreenhouse(slug, data) {
       title: j.title,
       location,
       remote: looksRemote(location),
+      workplace: null,
       url: j.absolute_url,
       postedAt: j.first_published || j.updated_at || null,
       description,
@@ -70,6 +76,7 @@ export function normalizeLever(slug, data) {
       title: j.text,
       location,
       remote: j.workplaceType === "remote" || looksRemote(location),
+      workplace: WORKPLACE[String(j.workplaceType || "").toLowerCase()] || null,
       url: j.hostedUrl,
       postedAt: j.createdAt ? new Date(j.createdAt).toISOString() : null,
       description: [j.descriptionPlain, lists, j.additionalPlain].filter(Boolean).join("\n"),
@@ -86,6 +93,7 @@ export function normalizeAshby(slug, data) {
     title: j.title,
     location: j.location || "",
     remote: j.isRemote === true || j.workplaceType === "Remote" || looksRemote(j.location),
+    workplace: WORKPLACE[String(j.workplaceType || "").toLowerCase()] || (j.isRemote === true ? "remote" : null),
     url: j.jobUrl || j.applyUrl,
     postedAt: j.publishedAt || null,
     description: j.descriptionPlain || htmlToText(j.descriptionHtml),
@@ -101,33 +109,12 @@ export function normalizeRemotive(data) {
     title: j.title,
     location: j.candidate_required_location || "Remote",
     remote: true,
+    workplace: "remote",
     url: j.url,
     postedAt: j.publication_date || null,
     description: htmlToText(j.description),
     salary: j.salary || null
   }));
-}
-
-export function normalizeUsajobs(data) {
-  return (data.SearchResult?.SearchResultItems || []).map((item) => {
-    const d = item.MatchedObjectDescriptor || {};
-    const details = d.UserArea?.Details || {};
-    const pay = (d.PositionRemuneration || [])[0];
-    const location = d.PositionLocationDisplay || "";
-    return {
-      id: `usajobs:${d.PositionID || item.MatchedObjectId}`,
-      source: "USAJOBS",
-      company: d.OrganizationName || d.DepartmentName || "US Government",
-      title: d.PositionTitle,
-      location,
-      remote: details.RemoteIndicator === true || looksRemote(location),
-      url: d.PositionURI,
-      postedAt: d.PublicationStartDate || null,
-      description: [details.JobSummary, d.QualificationSummary, (details.MajorDuties || []).join("\n"), details.SecurityClearance && `Security clearance: ${details.SecurityClearance}`]
-        .filter(Boolean).join("\n"),
-      salary: pay ? formatRange(pay.MinimumRange, pay.MaximumRange, pay.Description) : null
-    };
-  });
 }
 
 export function normalizeAdzuna(data) {
@@ -138,6 +125,7 @@ export function normalizeAdzuna(data) {
     title: htmlToText(j.title),
     location: j.location?.display_name || "",
     remote: looksRemote(j.location?.display_name, j.title, j.description),
+    workplace: null,
     url: j.redirect_url,
     postedAt: j.created || null,
     description: htmlToText(j.description),
@@ -172,20 +160,6 @@ export function buildTasks(sources, env = process.env) {
   for (const term of sources.remotive || []) {
     tasks.push({ name: `remotive/${term}`, run: async () =>
       normalizeRemotive(await getJson(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(term)}&limit=100`)) });
-  }
-
-  if (env.USAJOBS_API_KEY && env.USAJOBS_EMAIL) {
-    for (const term of sources.usajobs || []) {
-      const qs = new URLSearchParams({ Keyword: term, ResultsPerPage: "100", DatePosted: String(maxAge) });
-      tasks.push({ name: `usajobs/${term}`, run: async () =>
-        normalizeUsajobs(await getJson(`https://data.usajobs.gov/api/search?${qs}`, {
-          Host: "data.usajobs.gov",
-          "User-Agent": env.USAJOBS_EMAIL,
-          "Authorization-Key": env.USAJOBS_API_KEY
-        })) });
-    }
-  } else if ((sources.usajobs || []).length) {
-    tasks.push({ name: "usajobs", skipped: "set USAJOBS_API_KEY and USAJOBS_EMAIL to search federal jobs" });
   }
 
   if (env.ADZUNA_APP_ID && env.ADZUNA_APP_KEY) {

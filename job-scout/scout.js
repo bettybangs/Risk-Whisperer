@@ -8,14 +8,14 @@
 // Environment:
 //   ANTHROPIC_API_KEY                   enables the Claude fit review
 //   JOB_SCOUT_RESUME                    résumé text (else profile.resumeFile is read)
-//   USAJOBS_API_KEY, USAJOBS_EMAIL      enables federal jobs
+//   JOB_SCOUT_SKIP                      extra companies to skip, comma-separated
 //   ADZUNA_APP_ID, ADZUNA_APP_KEY       enables the Adzuna aggregator
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildTasks, fetchAll } from "./src/sources.js";
-import { filterJobs } from "./src/filter.js";
+import { filterJobs, loadSkipList } from "./src/filter.js";
 import { reviewJobs } from "./src/claude.js";
 import { loadSeen, saveSeen, buildDigest } from "./src/digest.js";
 
@@ -40,7 +40,8 @@ const { jobs, report } = await fetchAll(tasks);
 for (const r of report) log(`  ${r.status.padEnd(7)} ${r.name}: ${r.detail}`);
 
 const seen = args.has("--all") ? {} : loadSeen(seenPath);
-const matched = filterJobs(jobs, config, now.getTime());
+const skipList = loadSkipList(join(here, "skip.json"));
+const matched = filterJobs(jobs, config, skipList, now.getTime());
 const fresh = matched.filter((j) => !seen[j.id]);
 log(`${jobs.length} postings, ${matched.length} match your profile, ${fresh.length} are new.`);
 
