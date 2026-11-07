@@ -6,3 +6,4 @@ build
 job-scout/out/
 job-scout/seen.json
 job-scout/resume.txt
+job-scout/skip.json

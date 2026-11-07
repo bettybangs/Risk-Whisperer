@@ -69,8 +69,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           count=$(cat out/count.txt)
-          if [ "$count" = "0" ]; then
-            echo "No new matches today; not opening an issue."
+          reviewed=$(cat out/reviewed.txt)
+          # Open an issue when there are matches, or when the Claude review
+          # spent tokens even though it ruled everything out.
+          if [ "$count" = "0" ] && [ "$reviewed" = "0" ]; then
+            echo "No new matches and no Claude reviews today; not opening an issue."
             exit 0
           fi
           gh label create job-scout --color 0E8A16 --description "Daily job matches" 2>/dev/null || true

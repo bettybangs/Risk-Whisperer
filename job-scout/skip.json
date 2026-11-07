@@ -1,5 +1,0 @@
-{
-  "_comment": "Companies to leave out of every digest. Matched on the company name or board slug, ignoring case and suffixes like Inc. This file is public; put names you'd rather keep private in the JOB_SCOUT_SKIP secret (comma-separated) instead.",
-  "applied": [],
-  "ruledOut": []
-}

@@ -1,6 +1,7 @@
 // Seen-list and the Markdown digest.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { SECTION_ORDER } from "./filter.js";
 
 // Postings stay on the seen-list this long, so a role that is re-posted
 // after two months shows up again.
@@ -17,11 +18,17 @@ export function saveSeen(path, seen, now = new Date()) {
   writeFileSync(path, JSON.stringify(kept, null, 1) + "\n");
 }
 
+// Postings not seen before. A posting whose "applied" skip entry has
+// expired comes through once more, even if it was seen before it expired.
+export function selectNew(matched, seen) {
+  return matched.filter((j) => !seen[j.id] || (j.match.reappearedOn && seen[j.id] < j.match.reappearedOn));
+}
+
 // GitHub issue bodies are capped at 65,536 characters.
 const MAX_LISTED = 80;
 
 const TIER_ORDER = { A: 0, B: 1, C: 2 };
-const LOCATION_LABEL = { remote: "Remote", hybrid: "Hybrid", onsite: "On-site" };
+const LOCATION_LABEL = { remote: "Remote", hybrid: "Hybrid", onsite: "On-site", unclear: "Unclear" };
 
 function escapeMd(s) {
   return String(s || "").replace(/([\\[\]|*_`<>])/g, "\\$1");
@@ -61,6 +68,7 @@ export function formatPay(pay) {
 function row(job) {
   const label = LOCATION_LABEL[job.match.locType];
   const loc = !job.location ? label
+    : job.match.locType === "unclear" ? job.location
     : new RegExp(`\\b${label}\\b`, "i").test(job.location) ? job.location
     : `${label} · ${job.location}`;
   const notes = [...job.match.tags, ...job.match.flags].join(", ");
@@ -72,10 +80,35 @@ const HEADER = ["| Tier | Fit | Company | Title | Location | Pay | Main gap | Ta
 export function rankJobs(jobs) {
   return jobs
     .map((j) => ({ ...j, fit: fitScore(j), tier: tier(j) }))
-    .sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier] || b.fit - a.fit || b.match.score - a.match.score);
+    .sort((a, b) => SECTION_ORDER[a.match.section] - SECTION_ORDER[b.match.section]
+      || TIER_ORDER[a.tier] - TIER_ORDER[b.tier] || b.fit - a.fit || b.match.score - a.match.score);
 }
 
-export function buildDigest({ date, jobs, report, scanned, aiUsed }) {
+// List prices for Claude Opus 5, in dollars per million tokens. A request
+// rescued by a fallback model bills at that model's rates instead.
+const PRICE = { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 };
+
+export function estimateCost(stats) {
+  return (stats.inputTokens * PRICE.input + stats.outputTokens * PRICE.output
+    + stats.cacheReadTokens * PRICE.cacheRead + stats.cacheWriteTokens * PRICE.cacheWrite) / 1e6;
+}
+
+const num = (x) => x.toLocaleString("en-US");
+
+// The spend line at the bottom of every digest. `review` is { stats } when
+// the review ran, or { reason } when it didn't.
+export function spendLine(review) {
+  if (!review || !review.stats) return `**Claude review:** not run (${review?.reason || "no new postings"}). 0 tokens used.`;
+  const st = review.stats;
+  const parts = [`${num(st.sent)} posting${st.sent === 1 ? "" : "s"} sent`];
+  if (st.ruledOut) parts.push(`${num(st.ruledOut)} ruled out`);
+  if (st.failed) parts.push(`${num(st.failed)} failed`);
+  const cache = st.cacheReadTokens || st.cacheWriteTokens ? `, ${num(st.cacheReadTokens)} cache read, ${num(st.cacheWriteTokens)} cache write` : "";
+  return `**Claude review:** ${parts.join(", ")}. Tokens: ${num(st.inputTokens)} input, ${num(st.outputTokens)} output${cache}. `
+    + `Estimated cost $${estimateCost(st).toFixed(2)} at Claude Opus 5 list prices.`;
+}
+
+export function buildDigest({ date, jobs, report, scanned, aiUsed, review }) {
   const out = [`# GRC / IAM roles for ${date}`, ""];
   if (!jobs.length) {
     out.push("No new matching roles today.", "");
@@ -85,7 +118,8 @@ export function buildDigest({ date, jobs, report, scanned, aiUsed }) {
     out.push(`${jobs.length} new role${jobs.length === 1 ? "" : "s"} matched out of ${scanned} postings scanned.`, "");
     const sections = [
       ["primary", "Primary: Remote (US)"],
-      ["secondary", "Secondary: Hybrid (US) and on-site internships"]
+      ["secondary", "Secondary: Hybrid (US) and on-site internships"],
+      ["unclear", "Location unclear (check by hand)"]
     ];
     for (const [key, heading] of sections) {
       const items = listed.filter((j) => j.match.section === key);
@@ -93,7 +127,7 @@ export function buildDigest({ date, jobs, report, scanned, aiUsed }) {
       if (items.length) out.push(...HEADER, ...items.map(row), "");
       else out.push("None today.", "");
     }
-    if (ranked.length > listed.length) out.push(`_${ranked.length - listed.length} lower-ranked matches not shown._`, "");
+    if (ranked.length > listed.length) out.push(`_${ranked.length - listed.length} lower-ranked matches not shown, starting from the bottom section._`, "");
     out.push(aiUsed
       ? "Fit is Claude's 1-10 score against your résumé. \\* marks a keyword estimate (not reviewed)."
       : "\\* Fit is a keyword estimate (no Claude review ran). Add `ANTHROPIC_API_KEY` and `JOB_SCOUT_RESUME` for résumé-based scores.", "");
@@ -106,5 +140,6 @@ export function buildDigest({ date, jobs, report, scanned, aiUsed }) {
   if (problems.some((r) => r.status === "error")) {
     out.push("", "_A ❌ source usually means a wrong board slug in `job-scout/config.json`._");
   }
+  out.push("", "---", "", spendLine(review));
   return out.join("\n") + "\n";
 }

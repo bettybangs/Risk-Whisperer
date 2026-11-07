@@ -57,6 +57,8 @@ export function buildUserMessage(resume, job) {
   return `<resume>\n${resume}\n</resume>\n\n<job_posting>\n${posting}\n</job_posting>`;
 }
 
+// Returns { review, usage }. `usage` is the API's token count for the call,
+// which includes any fallback model's tokens.
 export async function reviewFit(client, resume, job) {
   const response = await client.beta.messages.create({
     ...MODEL,
@@ -68,36 +70,59 @@ export async function reviewFit(client, resume, job) {
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: buildUserMessage(resume, job) }]
   });
-  if (response.stop_reason === "refusal") throw new Error("the model declined to review this posting");
-  if (response.stop_reason === "max_tokens") throw new Error("the review was cut off");
+  const usage = response.usage || {};
+  const fail = (msg) => Object.assign(new Error(msg), { usage });
+  if (response.stop_reason === "refusal") throw fail("the model declined to review this posting");
+  if (response.stop_reason === "max_tokens") throw fail("the review was cut off");
   const block = response.content.find((b) => b.type === "text");
-  if (!block) throw new Error("no review text returned");
-  const review = JSON.parse(block.text);
+  if (!block) throw fail("no review text returned");
+  let review;
+  try { review = JSON.parse(block.text); } catch { throw fail("the review was not valid JSON"); }
   review.score = Math.max(1, Math.min(10, Math.round(review.score)));
-  return review;
+  return { review, usage };
 }
 
-// Review up to `limit` postings, best rule-based score first. Postings that
-// break an exclusion rule are dropped (and logged); a failed review keeps the
-// posting unreviewed so nothing is silently lost.
+export function emptyStats() {
+  return { sent: 0, failed: 0, ruledOut: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
+}
+
+function addUsage(stats, usage) {
+  if (!usage) return;
+  stats.inputTokens += usage.input_tokens || 0;
+  stats.outputTokens += usage.output_tokens || 0;
+  stats.cacheReadTokens += usage.cache_read_input_tokens || 0;
+  stats.cacheWriteTokens += usage.cache_creation_input_tokens || 0;
+}
+
+// Review up to `limit` postings in the order given. Postings that break an
+// exclusion rule are dropped (and logged); a failed review keeps the posting
+// unreviewed so nothing is silently lost. `stats` counts postings sent and
+// tokens used, for the spend line at the bottom of the digest.
 export async function reviewJobs(jobs, resume, { limit = 25, client = new Anthropic(), log = console.error } = {}) {
   const toReview = jobs.slice(0, limit);
   const rest = jobs.slice(limit);
   const reviewed = [];
+  const stats = emptyStats();
   let i = 0;
   async function worker() {
     while (i < toReview.length) {
       const job = toReview[i++];
+      stats.sent++;
       try {
-        const review = await reviewFit(client, resume, job);
-        if (review.dealbreaker.trim()) log(`  ruled out "${job.title}" at ${job.company}: ${review.dealbreaker}`);
-        else reviewed.push({ ...job, review });
+        const { review, usage } = await reviewFit(client, resume, job);
+        addUsage(stats, usage);
+        if (review.dealbreaker.trim()) {
+          stats.ruledOut++;
+          log(`  ruled out "${job.title}" at ${job.company}: ${review.dealbreaker}`);
+        } else reviewed.push({ ...job, review });
       } catch (e) {
+        stats.failed++;
+        addUsage(stats, e.usage);
         log(`  review failed for "${job.title}" at ${job.company}: ${e.message}`);
         reviewed.push(job);
       }
     }
   }
   await Promise.all([worker(), worker(), worker()]);
-  return { reviewed, unreviewed: rest };
+  return { reviewed, unreviewed: rest, stats };
 }

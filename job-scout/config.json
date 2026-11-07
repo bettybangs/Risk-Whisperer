@@ -1,10 +1,11 @@
 {
   "profile": {
-    "_comment": "Your résumé goes in the JOB_SCOUT_RESUME secret (or a local, git-ignored resume.txt). Companies you have applied to or ruled out go in skip.json.",
+    "_comment": "Your résumé goes in the JOB_SCOUT_RESUME secret (or a local, git-ignored resume.txt). Companies you have applied to or ruled out go in the JOB_SCOUT_SKIP secret or a local skip.json (see skip.example.json).",
     "resumeFile": "resume.txt",
     "payFloor": 85000,
-    "certifications": [],
-    "_certifications": "List the certifications you hold, e.g. \"Security+\". Postings that mention them score higher."
+    "certifications": ["CompTIA A+", "CompTIA Network+", "CompTIA Security+", "CompTIA Project+", "CompTIA PenTest+", "CompTIA CySA+", "LPI Linux Essentials", "AWS Certified Cloud Practitioner", "ITIL v4"],
+    "degree": "B.S. Cybersecurity and Information Assurance",
+    "_certifications": "Postings that mention one of your certifications (full name or short form, e.g. Security+) or ask for a degree in your field score higher."
   },
 
   "match": {

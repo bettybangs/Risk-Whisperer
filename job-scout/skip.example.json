@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to skip.json (git-ignored) for local runs, or paste the same JSON into the JOB_SCOUT_SKIP secret for the daily workflow. The secret wins when both exist. These entries are examples.",
+  "skip_companies": ["Example Staffing Co"],
+  "skip_postings": [
+    { "company": "Acme", "title": "GRC Analyst", "status": "applied", "added": "2026-11-01", "expires_days": 45 }
+  ],
+  "tag_companies": ["Globex"]
+}

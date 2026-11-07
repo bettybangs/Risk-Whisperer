@@ -105,18 +105,23 @@ export function isUSLocation(location) {
 const REMOTE_PHRASE = /\b(fully remote|100% remote|remote[- ]first|remote (position|role|opportunity|job)|work (remotely|from home|from anywhere)|(this|the) (role|position|job) is (fully )?remote|remote within the (US|United States)|remote in the (US|United States))\b/i;
 const HYBRID_PHRASE = /\bhybrid\b(?![\s-]+(cloud|environment|infrastructure|IT\b|it\b|identity|deployment|architecture|workforce model))|\b\d\s*(days?|x)\s*(a|per)\s*week\s*(in|at|from)\s*(the|our)?\s*office\b|\bin[- ]office\s+\d\s*days?\b/i;
 
-// "remote", "hybrid", or "onsite". The board's own label wins, then the
-// location text, then the description. A posting that never says remote or
-// hybrid is treated as on-site.
+const ONSITE_WHERE = /\b(on[- ]?site|in[- ]office|in[- ]person)\b/i;
+const ONSITE_PHRASE = /\b((this|the) (role|position|job) is (fully |100% )?(on[- ]?site|in[- ]office|in[- ]person)|fully on[- ]?site|100% on[- ]?site|on[- ]?site (position|role|only)|(5|five) days (a|per) week (in|at) (the |our )?office|in[- ]office (5|five) days|must (be able to )?work on[- ]?site|required to work (on[- ]?site|in[- ]office|in the office))\b/i;
+
+// "remote", "hybrid", "onsite", or "unclear". The board's own label wins,
+// then the location text, then the description. A posting that never says
+// which it is comes back "unclear" and is listed for a manual check.
 export function locationType(job) {
   if (job.workplace) return job.workplace;
   const where = `${job.location || ""} ${job.title || ""}`;
   if (/\bhybrid\b/i.test(where)) return "hybrid";
   if (/\bremote\b/i.test(where)) return "remote";
+  if (ONSITE_WHERE.test(where)) return "onsite";
   const text = job.description || "";
   if (REMOTE_PHRASE.test(text)) return "remote";
   if (HYBRID_PHRASE.test(text)) return "hybrid";
-  return "onsite";
+  if (ONSITE_PHRASE.test(text)) return "onsite";
+  return "unclear";
 }
 
 export function isInternship(title) {
@@ -208,23 +213,105 @@ function companyTokens(name) {
     .trim().split(/\s+/).filter(Boolean);
 }
 
-// skip.json plus the optional JOB_SCOUT_SKIP secret (comma-separated).
-export function loadSkipList(path, env = process.env) {
-  const names = [];
-  if (path && existsSync(path)) {
-    const data = JSON.parse(readFileSync(path, "utf8"));
-    for (const key of ["applied", "ruledOut"]) names.push(...(data[key] || []));
-  }
-  if (env.JOB_SCOUT_SKIP) names.push(...env.JOB_SCOUT_SKIP.split(","));
-  return names.map(companyTokens).filter((t) => t.length);
+// "Acme" matches "Acme Inc." and "Acme Cloud", but not "Acmeworks".
+export function companyMatches(company, tokens) {
+  const have = companyTokens(company);
+  return tokens.every((t, i) => have[i] === t) || have.join("") === tokens.join("");
 }
 
-// "Acme" skips "Acme Inc." and "Acme Cloud", but not "Acmeworks".
-export function isSkipped(company, skipList) {
-  const tokens = companyTokens(company);
-  const joined = tokens.join("");
-  return skipList.some((skip) =>
-    skip.every((t, i) => tokens[i] === t) || joined === skip.join(""));
+export const EMPTY_SKIP = { companies: [], postings: [], tagCompanies: [] };
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Check a skip list and turn it into what evaluate() needs. A mistake
+// stops the run with a message naming the entry, so a typo can't quietly
+// let an already-handled posting back in.
+//
+//   skip_companies  ["Acme"]                         always dropped
+//   skip_postings   [{ company, title, status, added, expires_days }]
+//                   status "ruled_out" never expires; "applied" is dropped
+//                   until expires_days after added, then shown again
+//                   tagged "previously applied"
+//   tag_companies   ["Globex"]                       kept, tagged "prior history"
+export function parseSkipList(data, source) {
+  const fail = (msg) => { throw new Error(`Skip list (${source}): ${msg}`); };
+  if (!data || typeof data !== "object" || Array.isArray(data)) fail("must be a JSON object");
+  const names = (key) => {
+    const list = data[key] ?? [];
+    if (!Array.isArray(list) || list.some((n) => typeof n !== "string" || !companyTokens(n).length)) fail(`${key} must be a list of company names`);
+    return list.map(companyTokens);
+  };
+  if (!Array.isArray(data.skip_postings ?? [])) fail("skip_postings must be a list");
+  const postings = (data.skip_postings ?? []).map((p, i) => {
+    const where = `skip_postings[${i}]`;
+    if (!p || typeof p !== "object") fail(`${where} must be an object`);
+    if (typeof p.company !== "string" || !companyTokens(p.company).length) fail(`${where} needs a company`);
+    if (typeof p.title !== "string" || !p.title.trim()) fail(`${where} needs a title keyword`);
+    if (p.status !== "ruled_out" && p.status !== "applied") fail(`${where} status must be "ruled_out" or "applied"`);
+    const entry = { company: companyTokens(p.company), title: termRegex(p.title), status: p.status, label: `${p.company} / ${p.title}` };
+    if (p.status === "applied") {
+      if (typeof p.added !== "string" || !DATE.test(p.added) || Number.isNaN(Date.parse(p.added))) fail(`${where} needs "added" as YYYY-MM-DD`);
+      if (!Number.isInteger(p.expires_days) || p.expires_days < 1) fail(`${where} needs "expires_days" as a whole number of days`);
+      entry.expires = new Date(Date.parse(p.added) + p.expires_days * 86400000).toISOString().slice(0, 10);
+    }
+    return entry;
+  });
+  return { companies: names("skip_companies"), postings, tagCompanies: names("tag_companies") };
+}
+
+// The JOB_SCOUT_SKIP secret when it is set, otherwise skip.json, otherwise
+// an empty list. The secret holds the same JSON as skip.json.
+export function loadSkipList(path, env = process.env) {
+  if (env.JOB_SCOUT_SKIP && env.JOB_SCOUT_SKIP.trim()) {
+    let data;
+    try { data = JSON.parse(env.JOB_SCOUT_SKIP); } catch { throw new Error("Skip list (JOB_SCOUT_SKIP secret): not valid JSON"); }
+    return parseSkipList(data, "JOB_SCOUT_SKIP secret");
+  }
+  if (path && existsSync(path)) {
+    let data;
+    try { data = JSON.parse(readFileSync(path, "utf8")); } catch (e) { throw new Error(`Skip list (skip.json): not valid JSON (${e.message})`); }
+    return parseSkipList(data, "skip.json");
+  }
+  return EMPTY_SKIP;
+}
+
+// What the skip list says about one posting: { drop } with a reason, or
+// { tags, reappearedOn } to keep it. `reappearedOn` is the date an
+// "applied" entry expired, so the seen-list can let it through once.
+export function skipStatus(job, skip, now = Date.now()) {
+  if (skip.companies.some((t) => companyMatches(job.company, t))) return { drop: "company is on your skip list" };
+  const tags = [];
+  let reappearedOn = null;
+  const today = new Date(now).toISOString().slice(0, 10);
+  for (const p of skip.postings) {
+    if (!companyMatches(job.company, p.company) || !p.title.test(job.title || "")) continue;
+    if (p.status === "ruled_out") return { drop: `ruled out (${p.label})` };
+    if (today < p.expires) return { drop: `already applied (${p.label}), back on ${p.expires}` };
+    if (!tags.includes("previously applied")) tags.push("previously applied");
+    if (!reappearedOn || p.expires > reappearedOn) reappearedOn = p.expires;
+  }
+  if (skip.tagCompanies.some((t) => companyMatches(job.company, t))) tags.push("prior history");
+  return { tags, reappearedOn };
+}
+
+// Search terms for a certification: the full name plus the short form most
+// postings use ("CompTIA Security+" → "Security+", "ITIL v4" → "ITIL").
+export function certTerms(cert) {
+  const short = cert.replace(/^(CompTIA|LPI|AWS Certified)\s+/i, "").replace(/\s+v?\d+$/i, "").trim();
+  return short && short !== cert ? [cert, short] : [cert];
+}
+
+// Fields of study from a degree name: "B.S. Cybersecurity and Information
+// Assurance" → ["Cybersecurity", "Information Assurance"].
+export function degreeFields(degree) {
+  return String(degree || "")
+    .replace(/^(B\.?S\.?|B\.?A\.?|Bachelor(?:'s)?(?: of (?:Science|Arts))?)\s+(in\s+)?/i, "")
+    .split(/\s+and\s+|,\s*/).map((f) => f.trim()).filter(Boolean);
+}
+
+// True when a sentence asks for a degree in one of your fields.
+export function mentionsDegree(text, fields) {
+  if (!fields.length) return false;
+  return sentences(text).some((s) => /\b(bachelor'?s?|B\.S\.|BS|degree)\b/i.test(s) && anyTerm(fields, s).length);
 }
 
 // ---- Evaluation ---------------------------------------------------------
@@ -239,17 +326,18 @@ function out(reason) {
   return { pass: false, reasons: [reason], score: 0, tags: [], flags: [], gaps: [] };
 }
 
-// Returns { pass, section, locType, pay, score, reasons, tags, flags, gaps }
-// for one posting. `tags` are facts shown on every hit (pay not listed,
+// Returns { pass, section, locType, pay, score, reasons, tags, flags, gaps,
+// reappearedOn } for one posting. `tags` are facts shown on every hit (pay not listed,
 // below floor); `flags` are reasons to look twice; `gaps` feed "main gap".
-export function evaluate(job, config, skipList = [], now = Date.now()) {
+export function evaluate(job, config, skip = EMPTY_SKIP, now = Date.now()) {
   const { profile, match } = config;
   const title = job.title || "";
   const description = job.description || "";
   const text = `${title}\n${description}`;
   const floor = profile.payFloor || 0;
 
-  if (isSkipped(job.company, skipList)) return out("company is on your skip list");
+  const skipped = skipStatus(job, skip, now);
+  if (skipped.drop) return out(skipped.drop);
 
   const titleHits = anyTerm(match.titleInclude, title);
   if (!titleHits.length) return out("title is not a target GRC or IAM role");
@@ -268,7 +356,8 @@ export function evaluate(job, config, skipList = [], now = Date.now()) {
   // stops repeats, so only drop postings that are clearly stale.
   if (age !== null && age > 30) return out("posted more than 30 days ago");
 
-  // Location: remote US first, hybrid US second, on-site only for internships.
+  // Location: remote US first, hybrid US second, on-site only for
+  // internships. Postings that don't say are kept for a manual check.
   const intern = isInternship(title);
   if (!isUSLocation(job.location)) return out(`location "${job.location}" is outside the US`);
   const locType = locationType(job);
@@ -292,7 +381,7 @@ export function evaluate(job, config, skipList = [], now = Date.now()) {
   const platform = platformYears(description, match.platformTools);
   if (platform && platform.years > (match.maxPlatformYears ?? 2)) return out(`asks for ${platform.years}+ years of ${platform.tool}`);
 
-  const tags = [];
+  const tags = [...skipped.tags];
   const flags = [];
   const gaps = [];
   if (years !== null && years >= 3) gaps.push(`asks for ${years}+ years`);
@@ -303,8 +392,8 @@ export function evaluate(job, config, skipList = [], now = Date.now()) {
     gaps.push("Senior title");
   }
 
-  // Pay. Remote under the floor stays (tagged); hybrid under the floor goes,
-  // except internships. Postings without pay stay, tagged.
+  // Pay. Remote (and location unclear) under the floor stays, tagged; hybrid
+  // under the floor goes, except internships. Postings without pay stay, tagged.
   const pay = parsePay(job.salary, true) || parsePay(description);
   if (!pay) tags.push("pay not listed");
   else if (pay.max < floor) {
@@ -324,20 +413,27 @@ export function evaluate(job, config, skipList = [], now = Date.now()) {
   const skills = anyTerm(match.skills, text);
   score += skills.length;
   if (skills.length) reasons.push(`skills: ${skills.join(", ")}`);
-  const held = anyTerm(profile.certifications, text);
-  score += held.length;
+  // Your own certifications and degree count double.
+  const held = (profile.certifications || []).filter((c) => anyTerm(certTerms(c), text).length);
+  score += held.length * 2;
   if (held.length) reasons.push(`your certs mentioned: ${held.join(", ")}`);
+  if (mentionsDegree(text, degreeFields(profile.degree))) { score += 2; reasons.push("asks for your degree field"); }
   if (locType === "remote") score += 1;
 
-  const section = locType === "remote" ? "primary" : "secondary";
-  return { pass: score >= (match.minScore ?? 3), section, locType, pay, score, reasons, tags, flags, gaps };
+  const section = SECTION[locType];
+  return { pass: score >= (match.minScore ?? 3), section, locType, pay, score, reasons, tags, flags, gaps, reappearedOn: skipped.reappearedOn };
 }
 
-export function filterJobs(jobs, config, skipList = [], now = Date.now()) {
+const SECTION = { remote: "primary", hybrid: "secondary", onsite: "secondary", unclear: "unclear" };
+export const SECTION_ORDER = { primary: 0, secondary: 1, unclear: 2 };
+
+// Keepers in section order, best score first within each section, so the
+// Claude review budget goes to remote roles before the rest.
+export function filterJobs(jobs, config, skip = EMPTY_SKIP, now = Date.now()) {
   const kept = [];
   for (const job of jobs) {
-    const result = evaluate(job, config, skipList, now);
+    const result = evaluate(job, config, skip, now);
     if (result.pass) kept.push({ ...job, match: result });
   }
-  return kept.sort((a, b) => b.match.score - a.match.score);
+  return kept.sort((a, b) => SECTION_ORDER[a.match.section] - SECTION_ORDER[b.match.section] || b.match.score - a.match.score);
 }
